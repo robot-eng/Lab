@@ -929,7 +929,7 @@ const ChemicalInventoryApp = () => {
 
                     {/* ID */}
                     <div className="md:col-span-1">
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">รหัสขวด (Bottle ID) <span className="text-red-500">*</span></label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">รหัสขวด (Bottle ID) ⚠️ใส่แล้วเปลี่ยนไม่ได้ <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         name="id"
