@@ -10,39 +10,53 @@ export const githubService = {
      */
     async fetchData(owner, repo, path = 'public/data.json', token) {
         try {
-            // 1. Try fetching via API to get the latest version (bypassing cache)
-            // We need the 'sha' for updates anyway.
-            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-            const headers = {
-                'Accept': 'application/vnd.github.v3+json',
-                'Cache-Control': 'no-cache'
-            };
-
+            // 1. Try fetching via API to get the latest version (if token available)
             if (token) {
-                headers['Authorization'] = `token ${token}`;
+                const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+                const headers = {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Cache-Control': 'no-cache',
+                    'Authorization': `token ${token}`
+                };
+
+                const response = await fetch(url, { headers });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const decodedContent = atob(data.content);
+                    const jsonString = decodeURIComponent(escape(decodedContent));
+
+                    return {
+                        data: JSON.parse(jsonString),
+                        sha: data.sha
+                    };
+                }
+                // If API fails, fallback to GitHub Pages
             }
 
-            const response = await fetch(url, { headers });
+            // 2. Fallback: Read from GitHub Pages (public, no auth needed)
+            const publicUrl = `https://${owner}.github.io/${repo}/${path}`;
+            const response = await fetch(publicUrl, {
+                headers: { 'Cache-Control': 'no-cache' }
+            });
 
             if (!response.ok) {
-                throw new Error(`GitHub API Error: ${response.statusText}`);
+                throw new Error(`Failed to load data: ${response.statusText}`);
             }
 
             const data = await response.json();
-
-            // Content is base64 encoded
-            const decodedContent = atob(data.content);
-            // Handle UTF-8 characters correctly
-            const jsonString = decodeURIComponent(escape(decodedContent));
-
             return {
-                data: JSON.parse(jsonString),
-                sha: data.sha // Important: we need this to update the file later
+                data: data,
+                sha: null // No SHA available from public URL
             };
 
         } catch (error) {
-            console.error("Error fetching data from GitHub:", error);
-            throw error;
+            console.error("Error fetching data:", error);
+            // Return empty data instead of throwing
+            return {
+                data: [],
+                sha: null
+            };
         }
     },
 
