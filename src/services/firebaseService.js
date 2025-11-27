@@ -25,6 +25,17 @@ export const firebaseService = {
     },
 
     /**
+     * Fetch data once without subscribing (alias for getData)
+     * @returns {Promise<Array>} Array of chemical items
+     */
+    async fetchDataOnce() {
+        const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Connection timed out')), 5000)
+        );
+        return Promise.race([this.getData(), timeout]);
+    },
+
+    /**
      * Save chemical data to Firebase
      * @param {Array} data - Array of chemical items
      * @returns {Promise<void>}

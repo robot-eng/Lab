@@ -305,6 +305,14 @@ const ChemicalInventoryApp = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setFilterLocation("All");
+    setFilterStatus("All");
+    setFilterGHS("All");
+    setFilterExpNote("All");
+  };
+
   const handleHazardToggle = (hazard) => {
     const currentHazards = formData.hazard ? formData.hazard.split(',').map(s => s.trim()).filter(Boolean) : [];
     let newHazards;
@@ -408,14 +416,22 @@ const ChemicalInventoryApp = () => {
             <input
               type="text"
               placeholder="ค้นหาชื่อ, ID, หรือ CAS..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+              className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
           {/* Bottom Row: Dropdowns */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
 
             {/* Location Filter */}
             <div className="relative">
@@ -487,20 +503,35 @@ const ChemicalInventoryApp = () => {
             <button
               onClick={() => {
                 setIsLoading(true);
-                firebaseService.fetchDataOnce().then(data => {
-                  setData(data || []);
-                  setIsLoading(false);
-                }).catch(err => {
-                  console.error("Error refreshing data:", err);
-                  setError("ไม่สามารถรีเฟรชข้อมูลได้");
-                  setIsLoading(false);
-                });
+                // Add minimum delay to show spinner
+                const minDelay = new Promise(resolve => setTimeout(resolve, 800));
+
+                Promise.all([firebaseService.fetchDataOnce(), minDelay])
+                  .then(([data]) => {
+                    setData(data || []);
+                    setIsLoading(false);
+                  })
+                  .catch(err => {
+                    console.error("Error refreshing data:", err);
+                    setError("ไม่สามารถรีเฟรชข้อมูลได้ (Timeout)");
+                    setIsLoading(false);
+                  });
               }}
-              className="flex items-center justify-center gap-2 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-gray-50 col-span-2 md:col-span-1"
+              className="flex items-center justify-center gap-2 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-gray-50 col-span-1"
               title="รีเฟรชข้อมูล"
             >
               <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-              <span className="md:hidden text-xs font-medium">รีเฟรชข้อมูล</span>
+              <span className="md:hidden text-xs font-medium">รีเฟรช</span>
+            </button>
+
+            {/* Reset Filters Button */}
+            <button
+              onClick={handleResetFilters}
+              className="flex items-center justify-center gap-2 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-white col-span-1"
+              title="ล้างตัวกรอง"
+            >
+              <X size={16} />
+              <span className="md:hidden text-xs font-medium">ล้างตัวกรอง</span>
             </button>
 
           </div>
