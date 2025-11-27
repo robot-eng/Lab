@@ -332,6 +332,16 @@ const ChemicalInventoryApp = () => {
     return Array.from(locs).sort();
   }, [data, formData.location]);
 
+  const formExpirationNotes = useMemo(() => {
+    const notes = new Set(data.map(d => d.expirationNote).filter(n => n && n !== '-'));
+    return Array.from(notes).sort();
+  }, [data]);
+
+  const formHazards = useMemo(() => {
+    const hazards = new Set(data.map(d => d.hazard).filter(h => h && h !== '-'));
+    return Array.from(hazards).sort();
+  }, [data]);
+
   const filteredData = data.filter(item => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -627,11 +637,11 @@ const ChemicalInventoryApp = () => {
         {/* Modal Form */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 z-50">
-            <div className="bg-white w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-5 duration-300">
+            <div className="bg-white w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[95vh] md:max-h-[90vh] animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-5 duration-300">
 
               <form onSubmit={handleFormSubmit} className="flex flex-col h-full">
                 {/* Modal Header */}
-                <div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-100">
+                <div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-100 shrink-0">
                   <div>
                     <h3 className="text-lg font-bold text-gray-800">
                       {isEditing ? 'แก้ไขข้อมูลสารเคมี' : 'เพิ่มสารเคมีใหม่'}
@@ -649,7 +659,7 @@ const ChemicalInventoryApp = () => {
 
                 {/* Modal Body - Scrollable */}
                 <div className="p-4 md:p-6 overflow-y-auto flex-1">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     {/* ID */}
                     <div className="md:col-span-1">
@@ -761,6 +771,7 @@ const ChemicalInventoryApp = () => {
                         กรณีสารหมดอายุ (Expiration Note)
                       </label>
                       <input
+                        list="expiration-notes"
                         type="text"
                         name="expirationNote"
                         value={formData.expirationNote}
@@ -768,12 +779,16 @@ const ChemicalInventoryApp = () => {
                         placeholder="เช่น ส่งกำจัดที่ตึก B, รอการบริจาค"
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                       />
+                      <datalist id="expiration-notes">
+                        {formExpirationNotes.map(note => <option key={note} value={note} />)}
+                      </datalist>
                     </div>
 
                     {/* Hazard Text */}
                     <div className="md:col-span-2">
                       <label className="block text-xs font-semibold text-gray-700 mb-1.5">คำอธิบายความเป็นอันตราย (Hazard Text)</label>
                       <input
+                        list="hazard-options"
                         type="text"
                         name="hazard"
                         value={formData.hazard}
@@ -781,6 +796,9 @@ const ChemicalInventoryApp = () => {
                         placeholder="เช่น สารกัดกร่อน, สารไวไฟ"
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                       />
+                      <datalist id="hazard-options">
+                        {formHazards.map(h => <option key={h} value={h} />)}
+                      </datalist>
                     </div>
 
                     {/* GHS Checkboxes */}
@@ -821,7 +839,7 @@ const ChemicalInventoryApp = () => {
                 </div>
 
                 {/* Modal Footer */}
-                <div className="p-4 md:p-6 border-t border-gray-100 bg-gray-50 md:rounded-b-2xl flex justify-end gap-3">
+                <div className="p-4 md:p-6 border-t border-gray-100 bg-gray-50 md:rounded-b-2xl flex justify-end gap-3 shrink-0">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
