@@ -433,7 +433,7 @@ const ChemicalInventoryApp = () => {
                 <Beaker className="text-white" size={20} />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-none">Chemical DB</h1>
+                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-none">chemical and Bio ☣️🧬</h1>
                 <p className="text-[10px] text-gray-500 dark:text-gray-400">Lab Inventory System</p>
               </div>
             </div>
