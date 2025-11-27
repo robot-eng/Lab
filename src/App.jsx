@@ -1,17 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search, Filter, AlertTriangle, Beaker, Flame, Skull, Droplet, Wind, CircleDot, Bug, AlertCircle,
-  FileSpreadsheet, Plus, Trash2, Edit, X, Save, Check, FileText, ChevronDown, ChevronUp, Settings, Loader2, RefreshCw, Eye, EyeOff
+  FileSpreadsheet, Plus, Trash2, Edit, X, Save, Check, FileText, ChevronDown, ChevronUp, Loader2, RefreshCw
 } from 'lucide-react';
-import { githubService } from './services/githubService';
+import { firebaseService } from './services/firebaseService';
 
-// --- 1. Constants & Config ---
-const DEFAULT_CONFIG = {
-  owner: "robot-eng",
-  repo: "Lab",
-  token: "",
-  path: "public/data.json"
-};
+
 
 const EMPTY_FORM = {
   id: "",
@@ -31,6 +25,7 @@ const HAZARD_OPTIONS = [
   "วัตถุระเบิด", "สารออกซิไดส์", "ก๊าซภายใต้ความดัน",
   "อันตรายต่อสุขภาพ", "อันตรายต่อสิ่งแวดล้อม"
 ];
+// --- 1. Constants ---
 
 // --- 2. Utility Components ---
 
@@ -165,120 +160,12 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
   );
 };
 
-// --- Settings Modal ---
-const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
-  const [localConfig, setLocalConfig] = useState(config);
-  const [showToken, setShowToken] = useState(false);
-  const [isChangingToken, setIsChangingToken] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setLocalConfig(config);
-      setIsChangingToken(false);
-      setShowToken(false);
-    }
-  }, [isOpen, config]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setLocalConfig(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(localConfig);
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md animate-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center p-6 border-b border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <Settings size={20} className="text-gray-500" />
-            ตั้งค่าการเชื่อมต่อ GitHub
-          </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
-          <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 border border-blue-100">
-            ข้อมูลนี้จะถูกเก็บไว้ในเครื่องของคุณเท่านั้น (Browser Storage) เพื่อใช้ในการบันทึกข้อมูลลง GitHub
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">GitHub Username (Owner)</label>
-            <input
-              type="text" name="owner" value={localConfig.owner} onChange={handleChange}
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-normal" placeholder="e.g. yourusername"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Repository Name</label>
-            <input
-              type="text" name="repo" value={localConfig.repo} onChange={handleChange}
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-normal" placeholder="e.g. chemical-inventory"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Personal Access Token</label>
-            {config.token && !isChangingToken ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-                  <Check size={16} className="text-green-600" />
-                  <span className="text-sm text-green-700 font-medium">Token ถูกบันทึกแล้ว</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsChangingToken(true)}
-                  className="text-xs text-blue-600 hover:text-blue-700 underline"
-                >
-                  เปลี่ยน Token
-                </button>
-              </div>
-            ) : (
-              <div className="relative">
-                <input
-                  type={showToken ? "text" : "password"}
-                  name="token"
-                  value={localConfig.token}
-                  onChange={handleChange}
-                  className="w-full p-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-normal"
-                  placeholder="ghp_xxxxxxxxxxxx"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowToken(!showToken)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
-                >
-                  {showToken ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            )}
-            <p className="text-xs text-gray-400 mt-1">ต้องมีสิทธิ์ (Scope) 'repo' หรือ 'public_repo'</p>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">ยกเลิก</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">บันทึกตั้งค่า</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 // --- 3. Main Application ---
 
 const ChemicalInventoryApp = () => {
-  // Config State
-  const [config, setConfig] = useState(() => {
-    const saved = localStorage.getItem('github_config');
-    return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
-  });
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
   // Data State
   const [data, setData] = useState([]);
-  const [fileSha, setFileSha] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -293,74 +180,62 @@ const ChemicalInventoryApp = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
 
-  // --- Data Loading ---
-  const loadData = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (config.owner && config.repo) {
-        // Load from GitHub
-        const result = await githubService.fetchData(config.owner, config.repo, config.path, config.token);
-        setData(result.data);
-        setFileSha(result.sha);
-      } else {
-        // Load local fallback or empty
-        const saved = localStorage.getItem('chemical_inventory_data');
-        if (saved) {
-          setData(JSON.parse(saved));
-        } else {
-          // Try to load from public folder directly if no config yet (initial view)
-          try {
-            const res = await fetch('data.json');
-            if (res.ok) {
-              const jsonData = await res.json();
-              setData(jsonData);
-            }
-          } catch (e) {
-            console.log("Could not load initial data.json", e);
-          }
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      setError("ไม่สามารถโหลดข้อมูลจาก GitHub ได้ กรุณาตรวจสอบการตั้งค่า");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // --- Data Loading (Realtime) ---
   useEffect(() => {
-    loadData();
-  }, [config]);
+    setIsLoading(true);
+    const unsubscribe = firebaseService.subscribeToData((newData) => {
+      setData(newData || []);
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
 
   // --- Handlers ---
 
-  const handleSaveConfig = (newConfig) => {
-    setConfig(newConfig);
-    localStorage.setItem('github_config', JSON.stringify(newConfig));
-    setIsSettingsOpen(false);
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      let newData;
+      if (isEditing) {
+        newData = data.map(item => item.id === formData.id ? formData : item);
+      } else {
+        if (data.some(item => item.id === formData.id)) {
+          throw new Error(`รหัสขวด ${formData.id} มีอยู่แล้ว กรุณาใช้รหัสอื่น`);
+        }
+        newData = [...data, formData];
+      }
+
+      // Save to Firebase
+      await firebaseService.saveData(newData);
+
+      // Success
+      setIsModalOpen(false);
+      setFormData(EMPTY_FORM);
+    } catch (err) {
+      console.error("Save error:", err);
+      setError(err.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSaveData = async (newData) => {
-    // Optimistic Update
-    setData(newData);
-    localStorage.setItem('chemical_inventory_data', JSON.stringify(newData)); // Local backup
+  const handleDelete = async (id) => {
+    if (!window.confirm("คุณแน่ใจหรือไม่ที่จะลบรายการนี้?")) return;
 
-    if (config.token && config.owner && config.repo) {
-      setIsSaving(true);
-      try {
-        const newSha = await githubService.saveData(config.owner, config.repo, config.path, config.token, newData, fileSha);
-        setFileSha(newSha);
-        // alert("บันทึกข้อมูลลง GitHub เรียบร้อยแล้ว");
-      } catch (err) {
-        console.error(err);
-        alert(`เกิดข้อผิดพลาดในการบันทึกไปยัง GitHub: ${err.message}`);
-        // Revert or keep local? We keep local for now.
-      } finally {
-        setIsSaving(false);
-      }
-    } else {
-      // alert("บันทึกในเครื่องเรียบร้อย (ยังไม่ได้เชื่อมต่อ GitHub)");
+    setIsSaving(true);
+    try {
+      const newData = data.filter(item => item.id !== id);
+      await firebaseService.saveData(newData);
+    } catch (err) {
+      console.error("Delete error:", err);
+      setError("เกิดข้อผิดพลาดในการลบข้อมูล");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -425,29 +300,6 @@ const ChemicalInventoryApp = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm(`ยืนยันการลบรายการ ${id}?`)) {
-      const newData = data.filter(item => item.id !== id);
-      await handleSaveData(newData);
-    }
-  };
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    let newData;
-    if (isEditing) {
-      newData = data.map(item => item.id === formData.id ? formData : item);
-    } else {
-      if (data.some(item => item.id === formData.id)) {
-        alert("รหัส Bottle ID นี้มีอยู่แล้ว กรุณาใช้รหัสอื่น");
-        return;
-      }
-      newData = [formData, ...data];
-    }
-    await handleSaveData(newData);
-    setIsModalOpen(false);
-  };
-
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -493,23 +345,11 @@ const ChemicalInventoryApp = () => {
                 <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
                   <Loader2 size={12} className="animate-spin" /> บันทึก...
                 </div>
-              ) : config.token ? (
+              ) : (
                 <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online
                 </div>
-              ) : (
-                <div className="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                  Offline
-                </div>
               )}
-
-              <button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
-                title="ตั้งค่าการเชื่อมต่อ"
-              >
-                <Settings size={20} />
-              </button>
 
               <button
                 onClick={handleAddNew}
@@ -645,7 +485,17 @@ const ChemicalInventoryApp = () => {
 
             {/* Refresh Button */}
             <button
-              onClick={loadData}
+              onClick={() => {
+                setIsLoading(true);
+                firebaseService.fetchDataOnce().then(data => {
+                  setData(data || []);
+                  setIsLoading(false);
+                }).catch(err => {
+                  console.error("Error refreshing data:", err);
+                  setError("ไม่สามารถรีเฟรชข้อมูลได้");
+                  setIsLoading(false);
+                });
+              }}
               className="flex items-center justify-center gap-2 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-gray-50 col-span-2 md:col-span-1"
               title="รีเฟรชข้อมูล"
             >
@@ -763,7 +613,7 @@ const ChemicalInventoryApp = () => {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 z-50">
             <div className="bg-white w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
 
-              <form onSubmit={handleFormSubmit} className="flex flex-col h-full min-h-0">
+              <form onSubmit={handleSave} className="flex flex-col h-full min-h-0">
                 {/* Modal Header */}
                 <div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-100 shrink-0">
                   <div>
@@ -971,13 +821,6 @@ const ChemicalInventoryApp = () => {
             </div>
           </div>
         )}
-
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-          config={config}
-          onSave={handleSaveConfig}
-        />
 
       </div>
     </div>
