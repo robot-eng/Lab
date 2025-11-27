@@ -717,7 +717,7 @@ const ChemicalInventoryApp = () => {
                         name="remaining"
                         value={formData.remaining}
                         onChange={handleFormChange}
-                        placeholder="เช่น 500 g"
+                        placeholder="เช่น 500/500 g หรือ 300/500 ml"
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
                     </div>
