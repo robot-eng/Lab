@@ -283,9 +283,9 @@ const ChemicalInventoryApp = () => {
 
   const filteredData = data.filter(item => {
     const matchesSearch =
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.cas.includes(searchTerm);
+      (item.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.cas || "").includes(searchTerm);
     const matchesLocation = filterLocation === "All" || item.location === filterLocation;
     const matchesStatus = filterStatus === "All" || item.status === filterStatus;
     const matchesGHS = filterGHS === "All" || (item.ghs && item.ghs[filterGHS]);
@@ -339,6 +339,24 @@ const ChemicalInventoryApp = () => {
     }));
   };
 
+  const handleStatClick = (type, value) => {
+    // Reset all filters first
+    setSearchTerm("");
+    setFilterLocation("All");
+    setFilterStatus("All");
+    setFilterGHS("All");
+    setFilterExpNote("All");
+
+    // Apply specific filter
+    if (type === 'status') setFilterStatus(value);
+    if (type === 'ghs') setFilterGHS(value);
+
+    // Scroll to filter section
+    setTimeout(() => {
+      document.getElementById('filter-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
+
   // --- Export Functions ---
   const exportToCSV = () => {
     const csvData = filteredData.map(item => ({
@@ -349,7 +367,10 @@ const ChemicalInventoryApp = () => {
       Remaining: item.remaining,
       Expiry: item.expiry,
       Status: item.status,
-      GHS: Object.keys(item.ghs || {}).filter(k => item.ghs[k]).join(', '),
+      GHS: Object.keys(item.ghs || {})
+        .filter(k => item.ghs[k])
+        .map(k => GHS_CONFIG.find(g => g.key === k)?.label || k)
+        .join(', '),
       Hazard: item.hazard,
       Note: item.expirationNote
     }));
@@ -383,7 +404,10 @@ const ChemicalInventoryApp = () => {
             <td>${item.remaining}</td>
             <td>${item.expiry}</td>
             <td>${item.status}</td>
-            <td>${Object.keys(item.ghs || {}).filter(k => item.ghs[k]).join(', ')}</td>
+            <td>${Object.keys(item.ghs || {})
+        .filter(k => item.ghs[k])
+        .map(k => GHS_CONFIG.find(g => g.key === k)?.label || k)
+        .join(', ')}</td>
             <td>${item.hazard}</td>
             <td>${item.expirationNote}</td>
           </tr>
@@ -418,7 +442,7 @@ const ChemicalInventoryApp = () => {
               {/* Status Indicator */}
               {isSaving ? (
                 <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full">
-                  <Loader2 size={12} className="animate-spin" /> บันทึก...
+                  <Loader2 size={12} className="animate-spin" /> Saving...
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
@@ -430,7 +454,7 @@ const ChemicalInventoryApp = () => {
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}
                 className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                title={isDarkMode ? "โหมดกลางวัน" : "โหมดกลางคืน"}
+                title={isDarkMode ? "Light Mode" : "Dark Mode"}
               >
                 {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
@@ -502,7 +526,7 @@ const ChemicalInventoryApp = () => {
                 className="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm transition-all active:scale-95"
               >
                 <Plus size={18} />
-                เพิ่มสารเคมีใหม่
+                Add New Chemical
               </button>
             </div>
           </div>
@@ -521,22 +545,34 @@ const ChemicalInventoryApp = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all">
-            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">สารเคมีทั้งหมด</div>
+          <button
+            onClick={() => handleStatClick('all', null)}
+            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
+          >
+            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Total Chemicals</div>
             <div className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{stats.total}</div>
-          </div>
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all">
-            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">พร้อมใช้งาน</div>
+          </button>
+          <button
+            onClick={() => handleStatClick('status', 'Ready')}
+            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
+          >
+            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Ready</div>
             <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{stats.ready}</div>
-          </div>
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all">
-            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">รอส่งกำจัด</div>
+          </button>
+          <button
+            onClick={() => handleStatClick('status', 'Dispose')}
+            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
+          >
+            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Dispose</div>
             <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">{stats.dispose}</div>
-          </div>
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all">
-            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">สารไวไฟ</div>
+          </button>
+          <button
+            onClick={() => handleStatClick('ghs', 'flammable')}
+            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
+          >
+            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Flammable</div>
             <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{stats.flammable}</div>
-          </div>
+          </button>
         </div>
 
         {/* Stats Dashboard */}
@@ -545,7 +581,7 @@ const ChemicalInventoryApp = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <BarChart3 size={20} className="text-blue-600 dark:text-blue-400" />
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">ภาพรวมสถิติ</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Statistics Overview</h3>
               </div>
               <button
                 onClick={() => setShowDashboard(false)}
@@ -558,7 +594,7 @@ const ChemicalInventoryApp = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Location Distribution */}
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">การกระจายตามสถานที่</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Location Distribution</h4>
                 {(() => {
                   const locationCounts = data.reduce((acc, item) => {
                     acc[item.location] = (acc[item.location] || 0) + 1;
@@ -568,7 +604,7 @@ const ChemicalInventoryApp = () => {
 
                   return (
                     <div className="space-y-2">
-                      {Object.entries(locationCounts).slice(0, 5).map(([loc, count]) => (
+                      {Object.entries(locationCounts).map(([loc, count]) => (
                         <div key={loc} className="flex items-center gap-2">
                           <div className="text-xs text-gray-600 dark:text-gray-400 w-24 truncate" title={loc}>{loc}</div>
                           <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
@@ -588,7 +624,7 @@ const ChemicalInventoryApp = () => {
 
               {/* Hazard Distribution */}
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">การกระจาย GHS</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">GHS Distribution</h4>
                 {(() => {
                   const ghsCounts = GHS_CONFIG.map(g => ({
                     ...g,
@@ -598,7 +634,7 @@ const ChemicalInventoryApp = () => {
 
                   return (
                     <div className="space-y-2">
-                      {ghsCounts.slice(0, 5).map((ghs) => (
+                      {ghsCounts.map((ghs) => (
                         <div key={ghs.key} className="flex items-center gap-2">
                           <div className="w-5 h-5 flex items-center justify-center">
                             <ghs.icon size={14} className={ghs.color} />
@@ -628,12 +664,12 @@ const ChemicalInventoryApp = () => {
             className="mb-6 w-full p-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
           >
             <BarChart3 size={18} />
-            <span className="text-sm font-medium">แสดงภาพรวมสถิติ</span>
+            <span className="text-sm font-medium">Show Statistics Overview</span>
           </button>
         )}
 
         {/* Filters */}
-        <div className="bg-white dark:bg-slate-800 p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 flex flex-col gap-2 md:gap-3 sticky top-16 z-20 md:static transition-all">
+        <div id="filter-section" className="bg-white dark:bg-slate-800 p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 flex flex-col gap-2 md:gap-3 sticky top-16 z-20 md:static transition-all">
 
           {/* Top Row: Search */}
           <div className="relative w-full">
