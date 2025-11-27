@@ -609,7 +609,7 @@ const ChemicalInventoryApp = () => {
                               className={`h-full transition-all duration-500 flex items-center justify-end pr-2 ${ghs.bg}`}
                               style={{ width: `${(ghs.count / maxCount) * 100}%` }}
                             >
-                              <span className="text-xs text-gray-800 dark:text-gray-200 font-medium">{ghs.count}</span>
+                              <span className="text-xs text-gray-900 dark:text-black-800 font-bold drop-shadow-sm">{ghs.count}</span>
                             </div>
                           </div>
                         </div>
