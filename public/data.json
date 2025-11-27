@@ -1,0 +1,112 @@
+[
+    {
+        "id": "A001",
+        "name": "Ammonium Sulphate",
+        "cas": "7783-20-2",
+        "hazard": "-",
+        "remaining": "400 g",
+        "location": "Storage 1",
+        "expiry": "2011",
+        "expirationNote": "-",
+        "status": "Ready",
+        "ghs": {
+            "explosive": false,
+            "flammable": false,
+            "oxidizing": false,
+            "gas": false,
+            "corrosive": false,
+            "toxic": false,
+            "irritant": false,
+            "health": false,
+            "env": false
+        }
+    },
+    {
+        "id": "A005 (1)",
+        "name": "Acetone",
+        "cas": "8006-64-2",
+        "hazard": "สารระคายเคือง, สารไวไฟ",
+        "remaining": "800 g",
+        "location": "ตู้ไวไฟ",
+        "expiry": "9/11/2024",
+        "expirationNote": "-",
+        "status": "Ready",
+        "ghs": {
+            "explosive": false,
+            "flammable": true,
+            "oxidizing": false,
+            "gas": false,
+            "corrosive": false,
+            "toxic": false,
+            "irritant": true,
+            "health": false,
+            "env": false
+        }
+    },
+    {
+        "id": "A012",
+        "name": "Crystal violet 88%",
+        "cas": "548-62-9",
+        "hazard": "สารกัดกร่อน, สารระคายเคือง, สารเป็นอันตรายต่อสุขภาพ",
+        "remaining": "5 ml",
+        "location": "Storage 1",
+        "expiry": "20 ธ.ค. 24",
+        "expirationNote": "รอส่งกำจัด 5 ml",
+        "status": "Dispose",
+        "ghs": {
+            "explosive": false,
+            "flammable": false,
+            "oxidizing": false,
+            "gas": false,
+            "corrosive": true,
+            "toxic": false,
+            "irritant": true,
+            "health": true,
+            "env": false
+        }
+    },
+    {
+        "id": "A036",
+        "name": "Potassium dichromate",
+        "cas": "7778-50-9",
+        "hazard": "สารออกซิไดส์, สารกัดกร่อน, สารพิษ",
+        "remaining": "150 g",
+        "location": "ตู้เก็บสารออกซิไดส์",
+        "expiry": "มิ.ย.-17",
+        "expirationNote": "-",
+        "status": "Ready",
+        "ghs": {
+            "explosive": false,
+            "flammable": false,
+            "oxidizing": true,
+            "gas": false,
+            "corrosive": true,
+            "toxic": true,
+            "irritant": false,
+            "health": true,
+            "env": true
+        }
+    },
+    {
+        "id": "A112",
+        "name": "Benzene",
+        "cas": "71-43-2",
+        "hazard": "สารไวไฟ, สารพิษ, ก่อมะเร็ง",
+        "remaining": "2500 ml",
+        "location": "ตู้ไวไฟ",
+        "expiry": "-",
+        "expirationNote": "-",
+        "status": "Not Ready",
+        "ghs": {
+            "explosive": false,
+            "flammable": true,
+            "oxidizing": false,
+            "gas": false,
+            "corrosive": false,
+            "toxic": true,
+            "irritant": true,
+            "health": true,
+            "env": true
+        }
+    }
+]
