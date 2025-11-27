@@ -1,11 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search, Filter, AlertTriangle, Beaker, Flame, Skull, Droplet, Wind, CircleDot, Bug, AlertCircle,
-  FileSpreadsheet, Plus, Trash2, Edit, X, Save, Check, FileText, ChevronDown, ChevronUp, Loader2, RefreshCw
+  Plus, Trash2, Edit, X, ChevronDown, ChevronUp, Loader2, RefreshCw, FileText, Check, Save, FileSpreadsheet,
+  Bomb, Fish
 } from 'lucide-react';
 import { firebaseService } from './services/firebaseService';
-
-
 
 const EMPTY_FORM = {
   id: "",
@@ -20,12 +19,19 @@ const EMPTY_FORM = {
   ghs: { explosive: false, flammable: false, oxidizing: false, gas: false, corrosive: false, toxic: false, irritant: false, health: false, env: false }
 };
 
-const HAZARD_OPTIONS = [
-  "สารกัดกร่อน", "สารไวไฟ", "สารมีพิษ", "สารระคายเคือง",
-  "วัตถุระเบิด", "สารออกซิไดส์", "ก๊าซภายใต้ความดัน",
-  "อันตรายต่อสุขภาพ", "อันตรายต่อสิ่งแวดล้อม"
-];
 // --- 1. Constants ---
+
+const GHS_CONFIG = [
+  { key: 'explosive', label: 'วัตถุระเบิด', icon: Bomb, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
+  { key: 'flammable', label: 'สารไวไฟ', icon: Flame, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+  { key: 'oxidizing', label: 'สารออกซิไดส์', icon: CircleDot, color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200' },
+  { key: 'gas', label: 'ก๊าซภายใต้ความดัน', icon: Wind, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+  { key: 'corrosive', label: 'สารกัดกร่อน', icon: Beaker, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200' },
+  { key: 'toxic', label: 'สารมีพิษ', icon: Skull, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
+  { key: 'irritant', label: 'สารระคายเคือง', icon: AlertCircle, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
+  { key: 'health', label: 'อันตรายต่อสุขภาพ', icon: AlertTriangle, color: 'text-pink-600', bg: 'bg-pink-50', border: 'border-pink-200' },
+  { key: 'env', label: 'อันตรายต่อสิ่งแวดล้อม', icon: Fish, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
+];
 
 // --- 2. Utility Components ---
 
@@ -57,22 +63,14 @@ const StatusBadge = ({ status }) => {
 const GHSIcons = ({ ghs, size = 16 }) => {
   if (!ghs) return null;
 
-  const icons = [
-    { key: 'explosive', title: "วัตถุระเบิด", icon: <div className="text-orange-600">💥</div> },
-    { key: 'flammable', title: "สารไวไฟ", icon: <div className="text-red-600"><Flame size={size} /></div> },
-    { key: 'oxidizing', title: "สารออกซิไดส์", icon: <div className="text-yellow-600"><CircleDot size={size} /></div> },
-    { key: 'gas', title: "ก๊าซภายใต้ความดัน", icon: <div className="text-blue-600"><Wind size={size} /></div> },
-    { key: 'corrosive', title: "สารกัดกร่อน", icon: <div className="text-gray-600"><Beaker size={size} /></div> },
-    { key: 'toxic', title: "สารมีพิษ", icon: <div className="text-purple-600"><Skull size={size} /></div> },
-    { key: 'irritant', title: "สารระคายเคือง", icon: <div className="text-orange-500"><AlertCircle size={size} /></div> },
-    { key: 'health', title: "อันตรายต่อสุขภาพ", icon: <div className="text-pink-600"><AlertTriangle size={size} /></div> },
-    { key: 'env', title: "อันตรายต่อสิ่งแวดล้อม", icon: <div className="text-teal-600"><Bug size={size} /></div> },
-  ];
-
   return (
     <div className="flex gap-1 flex-wrap">
-      {icons.map((item) => (
-        ghs[item.key] ? <div key={item.key} title={item.title} className="p-1 bg-gray-50 rounded border border-gray-200">{item.icon}</div> : null
+      {GHS_CONFIG.map((item) => (
+        ghs[item.key] ? (
+          <div key={item.key} title={item.label} className={`p-1 rounded border ${item.bg} ${item.border}`}>
+            <item.icon size={size} className={item.color} />
+          </div>
+        ) : null
       ))}
     </div>
   );
@@ -295,7 +293,11 @@ const ChemicalInventoryApp = () => {
   };
 
   const handleEdit = (item) => {
-    setFormData(item);
+    setFormData({
+      ...EMPTY_FORM,
+      ...item,
+      ghs: item.ghs || EMPTY_FORM.ghs
+    });
     setIsEditing(true);
     setIsModalOpen(true);
   };
@@ -311,17 +313,6 @@ const ChemicalInventoryApp = () => {
     setFilterStatus("All");
     setFilterGHS("All");
     setFilterExpNote("All");
-  };
-
-  const handleHazardToggle = (hazard) => {
-    const currentHazards = formData.hazard ? formData.hazard.split(',').map(s => s.trim()).filter(Boolean) : [];
-    let newHazards;
-    if (currentHazards.includes(hazard)) {
-      newHazards = currentHazards.filter(h => h !== hazard);
-    } else {
-      newHazards = [...currentHazards, hazard];
-    }
-    setFormData(prev => ({ ...prev, hazard: newHazards.join(', ') }));
   };
 
   const handleGhsToggle = (key) => {
@@ -388,20 +379,20 @@ const ChemicalInventoryApp = () => {
         )}
 
         {/* Stats Cards */}
-        <div className="flex md:grid md:grid-cols-4 gap-3 mb-6 overflow-x-auto pb-2 md:pb-0 snap-x">
-          <div className="min-w-[140px] snap-start bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">สารเคมีทั้งหมด</div>
             <div className="text-2xl font-bold text-gray-800 mt-1">{stats.total}</div>
           </div>
-          <div className="min-w-[140px] snap-start bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">พร้อมใช้งาน</div>
             <div className="text-2xl font-bold text-green-600 mt-1">{stats.ready}</div>
           </div>
-          <div className="min-w-[140px] snap-start bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">รอส่งกำจัด</div>
             <div className="text-2xl font-bold text-yellow-600 mt-1">{stats.dispose}</div>
           </div>
-          <div className="min-w-[140px] snap-start bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">สารไวไฟ</div>
             <div className="text-2xl font-bold text-red-600 mt-1">{stats.flammable}</div>
           </div>
@@ -561,16 +552,16 @@ const ChemicalInventoryApp = () => {
             <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold tracking-wider">
+                  <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold tracking-wider sticky top-0 z-10">
                     <tr>
-                      <th className="p-4 border-b">ID</th>
-                      <th className="p-4 border-b">ชื่อสารเคมี / CAS</th>
-                      <th className="p-4 border-b">ปริมาณ</th>
-                      <th className="p-4 border-b">ที่เก็บ</th>
-                      <th className="p-4 border-b text-center">หมายเหตุ</th>
-                      <th className="p-4 border-b text-center">GHS</th>
-                      <th className="p-4 border-b text-center">สถานะ</th>
-                      <th className="p-4 border-b text-right">จัดการ</th>
+                      <th className="p-4 border-b w-[10%]">ID</th>
+                      <th className="p-4 border-b w-[25%]">ชื่อสารเคมี / CAS</th>
+                      <th className="p-4 border-b w-[15%]">ปริมาณ</th>
+                      <th className="p-4 border-b w-[15%]">ที่เก็บ</th>
+                      <th className="p-4 border-b text-center w-[10%]">หมายเหตุ</th>
+                      <th className="p-4 border-b text-center w-[10%]">GHS</th>
+                      <th className="p-4 border-b text-center w-[10%]">สถานะ</th>
+                      <th className="p-4 border-b text-right w-[5%]">จัดการ</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
@@ -641,7 +632,7 @@ const ChemicalInventoryApp = () => {
 
         {/* Modal Form */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 z-50">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 z-50 animate-in fade-in duration-200">
             <div className="bg-white w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
 
               <form onSubmit={handleSave} className="flex flex-col h-full min-h-0">
@@ -798,17 +789,7 @@ const ChemicalInventoryApp = () => {
                     <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
                       <label className="block text-sm font-bold text-gray-800 mb-3">สัญลักษณ์ GHS (เลือกตามจริง)</label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {[
-                          { key: 'explosive', label: 'วัตถุระเบิด 💥', icon: '💥' },
-                          { key: 'flammable', label: 'สารไวไฟ 🔥', icon: '🔥' },
-                          { key: 'oxidizing', label: 'สารออกซิไดส์ ⭕', icon: '⭕' },
-                          { key: 'gas', label: 'ก๊าซภายใต้ความดัน 💨', icon: '💨' },
-                          { key: 'corrosive', label: 'สารกัดกร่อน 🧪', icon: '🧪' },
-                          { key: 'toxic', label: 'สารมีพิษ 🦴', icon: '☠️' },
-                          { key: 'irritant', label: 'สารระคายเคือง ⚠️', icon: '⚠️' },
-                          { key: 'health', label: 'อันตรายต่อสุขภาพ 🧑', icon: '👤' },
-                          { key: 'env', label: 'อันตรายต่อสิ่งแวดล้อม 🐟', icon: '🐟' },
-                        ].map((ghs) => (
+                        {GHS_CONFIG.map((ghs) => (
                           <div
                             key={ghs.key}
                             onClick={() => handleGhsToggle(ghs.key)}
@@ -819,10 +800,11 @@ const ChemicalInventoryApp = () => {
                                 : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50'}
                             `}
                           >
-                            <div className={`w-4 h-4 rounded flex items-center justify-center ${formData.ghs[ghs.key] ? 'bg-white/20' : 'bg-gray-100'}`}>
-                              {formData.ghs[ghs.key] && <Check size={12} />}
+                            <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${formData.ghs[ghs.key] ? 'bg-white/20' : 'bg-gray-100'}`}>
+                              <ghs.icon size={14} className={formData.ghs[ghs.key] ? 'text-white' : ghs.color} />
                             </div>
                             <span className="truncate">{ghs.label}</span>
+                            {formData.ghs[ghs.key] && <Check size={14} className="ml-auto" />}
                           </div>
                         ))}
                       </div>
