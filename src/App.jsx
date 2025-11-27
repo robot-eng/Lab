@@ -1043,7 +1043,7 @@ const ChemicalInventoryApp = () => {
 
                     {/* Hazard Text */}
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">คำอธิบายความเป็นอันตราย (Hazard Text)</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">คำอธิบายความเป็นอันตราย (Hazard Text)/highlight</label>
 
                       <input
                         type="text"
