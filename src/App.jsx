@@ -22,15 +22,15 @@ const EMPTY_FORM = {
 // --- 1. Constants ---
 
 const GHS_CONFIG = [
-  { key: 'explosive', label: 'วัตถุระเบิด', icon: Bomb, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
-  { key: 'flammable', label: 'สารไวไฟ', icon: Flame, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
-  { key: 'oxidizing', label: 'สารออกซิไดส์', icon: CircleDot, color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200' },
-  { key: 'gas', label: 'ก๊าซภายใต้ความดัน', icon: Wind, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-  { key: 'corrosive', label: 'สารกัดกร่อน', icon: Beaker, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200' },
-  { key: 'toxic', label: 'สารมีพิษ', icon: Skull, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
-  { key: 'irritant', label: 'สารระคายเคือง', icon: AlertCircle, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
-  { key: 'health', label: 'อันตรายต่อสุขภาพ', icon: AlertTriangle, color: 'text-pink-600', bg: 'bg-pink-50', border: 'border-pink-200' },
-  { key: 'env', label: 'อันตรายต่อสิ่งแวดล้อม', icon: Fish, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
+  { key: 'explosive', label: 'Explosive', icon: Bomb, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
+  { key: 'flammable', label: 'Flammable', icon: Flame, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+  { key: 'oxidizing', label: 'Oxidizing', icon: CircleDot, color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200' },
+  { key: 'gas', label: 'Compressed Gas', icon: Wind, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+  { key: 'corrosive', label: 'Corrosive', icon: Beaker, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200' },
+  { key: 'toxic', label: 'Toxic', icon: Skull, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
+  { key: 'irritant', label: 'Irritant', icon: AlertCircle, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
+  { key: 'health', label: 'Health Hazard', icon: AlertTriangle, color: 'text-pink-600', bg: 'bg-pink-50', border: 'border-pink-200' },
+  { key: 'env', label: 'Environmental Hazard', icon: Fish, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
 ];
 
 // --- 2. Utility Components ---
@@ -41,16 +41,16 @@ const StatusBadge = ({ status }) => {
 
   if (status === "Ready" || status === "TRUE") {
     colorClass = "bg-green-100 text-green-800 border border-green-200";
-    label = "พร้อมใช้งาน";
+    label = "Ready";
   } else if (status === "Not Ready") {
     colorClass = "bg-red-100 text-red-800 border border-red-200";
-    label = "ไม่พร้อมใช้งาน";
+    label = "Not Ready";
   } else if (status === "Dispose") {
     colorClass = "bg-yellow-100 text-yellow-800 border border-yellow-200";
-    label = "ส่งกำจัด";
+    label = "Dispose";
   } else if (status === "Donate") {
     colorClass = "bg-blue-100 text-blue-800 border border-blue-200";
-    label = "บริจาค";
+    label = "Donate";
   }
 
   return (
@@ -109,15 +109,15 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
 
       <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-3 rounded border border-gray-100 dark:border-gray-600">
         <div>
-          <span className="text-xs text-gray-500 dark:text-gray-400 block">ปริมาณ</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 block">Quantity</span>
           <span className="font-medium">{item.remaining || "-"}</span>
         </div>
         <div>
-          <span className="text-xs text-gray-500 dark:text-gray-400 block">วันหมดอายุ</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 block">Expiry Date</span>
           <span className="font-medium">{item.expiry || "-"}</span>
         </div>
         <div className="col-span-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400 block">สถานที่เก็บ</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 block">Location</span>
           <span className="font-medium">{item.location}</span>
         </div>
       </div>
@@ -127,13 +127,13 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
         <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex flex-col gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
           {item.hazard !== '-' && (
             <div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 block">อันตราย</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 block">Hazard</span>
               <span className="text-sm text-orange-700 dark:text-orange-400">{item.hazard}</span>
             </div>
           )}
           {item.expirationNote && item.expirationNote !== '-' && (
             <div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 block">หมายเหตุหมดอายุ</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 block">Expiration Note</span>
               <span className="text-sm text-gray-700 dark:text-gray-300 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded inline-block">{item.expirationNote}</span>
             </div>
           )}
@@ -149,9 +149,9 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
         className="w-full py-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 flex items-center justify-center gap-1 transition-colors"
       >
         {isExpanded ? (
-          <>ซ่อนรายละเอียด <ChevronUp size={14} /></>
+          <>Hide Details <ChevronUp size={14} /></>
         ) : (
-          <>ดูรายละเอียดเพิ่มเติม <ChevronDown size={14} /></>
+          <>Show More <ChevronDown size={14} /></>
         )}
       </button>
     </div>
@@ -220,7 +220,7 @@ const ChemicalInventoryApp = () => {
         newData = data.map(item => item.id === formData.id ? formData : item);
       } else {
         if (data.some(item => item.id === formData.id)) {
-          throw new Error(`รหัสขวด ${formData.id} มีอยู่แล้ว กรุณาใช้รหัสอื่น`);
+          throw new Error(`ID ${formData.id} already exists. Please use a different ID.`);
         }
         newData = [...data, formData];
       }
@@ -233,14 +233,14 @@ const ChemicalInventoryApp = () => {
       setFormData(EMPTY_FORM);
     } catch (err) {
       console.error("Save error:", err);
-      setError(err.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      setError(err.message || "Error saving data");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("คุณแน่ใจหรือไม่ที่จะลบรายการนี้?")) return;
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
 
     setIsSaving(true);
     try {
@@ -248,7 +248,7 @@ const ChemicalInventoryApp = () => {
       await firebaseService.saveData(newData);
     } catch (err) {
       console.error("Delete error:", err);
-      setError("เกิดข้อผิดพลาดในการลบข้อมูล");
+      setError("Error deleting data");
     } finally {
       setIsSaving(false);
     }
