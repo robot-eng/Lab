@@ -1050,7 +1050,7 @@ const ChemicalInventoryApp = () => {
                         name="hazard"
                         value={formData.hazard}
                         onChange={handleFormChange}
-                        placeholder="เช่น ระวังเข้าตา, ห้ามสูดดม"
+                        placeholder="เช่น ระวังเข้าตา, ห้ามสูดดม, highlight ต่างๆที่อยากเพิ่ม"
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
                     </div>
