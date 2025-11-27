@@ -435,10 +435,10 @@ const ChemicalInventoryApp = () => {
                 {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
-              {/* Export Dropdown */}
-              <div className="relative group">
+              {/* Export Dropdown - Desktop */}
+              <div className="hidden md:block relative group">
                 <button
-                  className="hidden md:flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   title="Export ข้อมูล"
                 >
                   <Download size={18} />
@@ -452,6 +452,38 @@ const ChemicalInventoryApp = () => {
                   </button>
                   <button
                     onClick={exportToExcel}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg transition-colors"
+                  >
+                    📊 Export Excel
+                  </button>
+                </div>
+              </div>
+
+              {/* Export Dropdown - Mobile */}
+              <div className="md:hidden relative">
+                <button
+                  onClick={(e) => {
+                    const menu = e.currentTarget.nextElementSibling;
+                    menu.classList.toggle('hidden');
+                  }}
+                  className="flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Export ข้อมูล"
+                >
+                  <Download size={18} />
+                </button>
+                <div className="hidden absolute right-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
+                  <button
+                    onClick={exportToCSV}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg transition-colors"
+                  >
+                    📄 Export CSV
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('การดาวน์โหลด Excel บนมือถืออาจมีข้อจำกัด\n\nหากดาวน์โหลดไม่สำเร็จ แนะนำให้ใช้คอมพิวเตอร์ หรือเลือก Export CSV แทน\n\nต้องการดาวน์โหลด Excel ต่อหรือไม่?')) {
+                        exportToExcel();
+                      }
+                    }}
                     className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg transition-colors"
                   >
                     📊 Export Excel
