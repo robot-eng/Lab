@@ -828,7 +828,7 @@ const ChemicalInventoryApp = () => {
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[25%]">ชื่อสารเคมี / CAS</th>
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[15%]">ปริมาณ</th>
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[15%]">ที่เก็บ</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">หมายเหตุ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">หมายเหตุ/Note</th>
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">GHS</th>
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">สถานะ</th>
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-right w-[5%]">จัดการ</th>
@@ -1029,14 +1029,14 @@ const ChemicalInventoryApp = () => {
                     <div className="md:col-span-2">
                       <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1">
                         <FileText size={14} className="text-gray-400" />
-                        กรณีสารหมดอายุ/หมายเหตุ
+                        กรณีสารหมดอายุ/หมายเหตุ/Note
                       </label>
                       <input
                         type="text"
                         name="expirationNote"
                         value={formData.expirationNote}
                         onChange={handleFormChange}
-                        placeholder="เช่น ส่งกำจัดที่ตึก B, รอการบริจาค, หมายเหตุเพิ่มเติม"
+                        placeholder="เช่น ส่งกำจัดที่ตึก B, รอการบริจาค, หมายเหตุ/Noteเพิ่มเติม"
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
                     </div>
