@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search, Filter, AlertTriangle, Beaker, Flame, Skull, Droplet, Wind, CircleDot, Bug, AlertCircle,
   Plus, Trash2, Edit, X, ChevronDown, ChevronUp, Loader2, RefreshCw, FileText, Check, Save, FileSpreadsheet,
-  Bomb, Fish
+  Bomb, Fish, Moon, Sun, Download, BarChart3
 } from 'lucide-react';
 import { firebaseService } from './services/firebaseService';
 
@@ -81,64 +81,64 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-3 flex flex-col gap-3">
+    <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-3 flex flex-col gap-3 transition-colors">
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-mono text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">{item.id}</span>
+            <span className="font-mono text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800">{item.id}</span>
             <StatusBadge status={item.status} />
           </div>
-          <h3 className="font-bold text-gray-800 text-lg leading-tight">{item.name}</h3>
-          <div className="text-xs text-gray-500 font-mono mt-1">CAS: {item.cas}</div>
+          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg leading-tight">{item.name}</h3>
+          <div className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">CAS: {item.cas}</div>
         </div>
         <div className="flex gap-1">
           <button
             onClick={() => onEdit(item)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors"
           >
             <Edit size={18} />
           </button>
           <button
             onClick={() => onDelete(item.id)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors"
           >
             <Trash2 size={18} />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-100">
+      <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-3 rounded border border-gray-100 dark:border-gray-600">
         <div>
-          <span className="text-xs text-gray-500 block">ปริมาณ</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 block">ปริมาณ</span>
           <span className="font-medium">{item.remaining || "-"}</span>
         </div>
         <div>
-          <span className="text-xs text-gray-500 block">วันหมดอายุ</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 block">วันหมดอายุ</span>
           <span className="font-medium">{item.expiry || "-"}</span>
         </div>
         <div className="col-span-2">
-          <span className="text-xs text-gray-500 block">สถานที่เก็บ</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 block">สถานที่เก็บ</span>
           <span className="font-medium">{item.location}</span>
         </div>
       </div>
 
       {/* Expandable Details */}
       {isExpanded && (
-        <div className="pt-2 border-t border-gray-100 flex flex-col gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex flex-col gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
           {item.hazard !== '-' && (
             <div>
-              <span className="text-xs text-gray-500 block">อันตราย</span>
-              <span className="text-sm text-orange-700">{item.hazard}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 block">อันตราย</span>
+              <span className="text-sm text-orange-700 dark:text-orange-400">{item.hazard}</span>
             </div>
           )}
           {item.expirationNote && item.expirationNote !== '-' && (
             <div>
-              <span className="text-xs text-gray-500 block">หมายเหตุหมดอายุ</span>
-              <span className="text-sm text-gray-700 bg-yellow-50 px-2 py-1 rounded inline-block">{item.expirationNote}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 block">หมายเหตุหมดอายุ</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded inline-block">{item.expirationNote}</span>
             </div>
           )}
           <div>
-            <span className="text-xs text-gray-500 block mb-1">GHS</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">GHS</span>
             <GHSIcons ghs={item.ghs} size={20} />
           </div>
         </div>
@@ -146,7 +146,7 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
 
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full py-1 text-xs text-gray-400 hover:text-gray-600 flex items-center justify-center gap-1 transition-colors"
+        className="w-full py-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 flex items-center justify-center gap-1 transition-colors"
       >
         {isExpanded ? (
           <>ซ่อนรายละเอียด <ChevronUp size={14} /></>
@@ -178,6 +178,13 @@ const ChemicalInventoryApp = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
 
+  // Theme State
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [showDashboard, setShowDashboard] = useState(true);
+
   // --- Data Loading (Realtime) ---
   useEffect(() => {
     setIsLoading(true);
@@ -189,6 +196,16 @@ const ChemicalInventoryApp = () => {
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
+
+  // --- Dark Mode Effect ---
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // --- Handlers ---
 
@@ -322,33 +339,125 @@ const ChemicalInventoryApp = () => {
     }));
   };
 
+  // --- Export Functions ---
+  const exportToCSV = () => {
+    const csvData = filteredData.map(item => ({
+      ID: item.id,
+      Name: item.name,
+      CAS: item.cas,
+      Location: item.location,
+      Remaining: item.remaining,
+      Expiry: item.expiry,
+      Status: item.status,
+      GHS: Object.keys(item.ghs || {}).filter(k => item.ghs[k]).join(', '),
+      Hazard: item.hazard,
+      Note: item.expirationNote
+    }));
+
+    const headers = Object.keys(csvData[0] || {});
+    const csv = [
+      headers.join(','),
+      ...csvData.map(row => headers.map(h => `"${row[h] || ''}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `chemical-inventory-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  const exportToExcel = () => {
+    const htmlTable = `
+      <table>
+        <tr>
+          <th>ID</th><th>Name</th><th>CAS</th><th>Location</th><th>Remaining</th>
+          <th>Expiry</th><th>Status</th><th>GHS</th><th>Hazard</th><th>Note</th>
+        </tr>
+        ${filteredData.map(item => `
+          <tr>
+            <td>${item.id}</td>
+            <td>${item.name}</td>
+            <td>${item.cas}</td>
+            <td>${item.location}</td>
+            <td>${item.remaining}</td>
+            <td>${item.expiry}</td>
+            <td>${item.status}</td>
+            <td>${Object.keys(item.ghs || {}).filter(k => item.ghs[k]).join(', ')}</td>
+            <td>${item.hazard}</td>
+            <td>${item.expirationNote}</td>
+          </tr>
+        `).join('')}
+      </table>
+    `;
+
+    const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `chemical-inventory-${new Date().toISOString().split('T')[0]}.xls`;
+    link.click();
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-20 md:pb-0">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-20 md:pb-0 transition-colors duration-200">
       {/* Top Navigation Bar */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+      <nav className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <div className="bg-blue-600 p-1.5 rounded-lg">
+              <div className="bg-blue-600 dark:bg-blue-500 p-1.5 rounded-lg transition-colors">
                 <Beaker className="text-white" size={20} />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-900 leading-none">Chemical DB</h1>
-                <p className="text-[10px] text-gray-500">Lab Inventory System</p>
+                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-none">Chemical DB</h1>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400">Lab Inventory System</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Status Indicator */}
               {isSaving ? (
-                <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full">
                   <Loader2 size={12} className="animate-spin" /> บันทึก...
                 </div>
               ) : (
-                <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online
                 </div>
               )}
+
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title={isDarkMode ? "โหมดกลางวัน" : "โหมดกลางคืน"}
+              >
+                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+
+              {/* Export Dropdown */}
+              <div className="relative group">
+                <button
+                  className="hidden md:flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Export ข้อมูล"
+                >
+                  <Download size={18} />
+                </button>
+                <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                  <button
+                    onClick={exportToCSV}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg transition-colors"
+                  >
+                    📄 Export CSV
+                  </button>
+                  <button
+                    onClick={exportToExcel}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg transition-colors"
+                  >
+                    📊 Export Excel
+                  </button>
+                </div>
+              </div>
 
               <button
                 onClick={handleAddNew}
@@ -372,7 +481,7 @@ const ChemicalInventoryApp = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2 text-sm">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 flex items-center gap-2 text-sm">
             <AlertTriangle size={16} />
             {error}
           </div>
@@ -380,41 +489,134 @@ const ChemicalInventoryApp = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-            <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">สารเคมีทั้งหมด</div>
-            <div className="text-2xl font-bold text-gray-800 mt-1">{stats.total}</div>
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all">
+            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">สารเคมีทั้งหมด</div>
+            <div className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{stats.total}</div>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-            <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">พร้อมใช้งาน</div>
-            <div className="text-2xl font-bold text-green-600 mt-1">{stats.ready}</div>
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all">
+            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">พร้อมใช้งาน</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{stats.ready}</div>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-            <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">รอส่งกำจัด</div>
-            <div className="text-2xl font-bold text-yellow-600 mt-1">{stats.dispose}</div>
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all">
+            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">รอส่งกำจัด</div>
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">{stats.dispose}</div>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-            <div className="text-gray-500 text-xs font-medium uppercase tracking-wider">สารไวไฟ</div>
-            <div className="text-2xl font-bold text-red-600 mt-1">{stats.flammable}</div>
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all">
+            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">สารไวไฟ</div>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{stats.flammable}</div>
           </div>
         </div>
 
+        {/* Stats Dashboard */}
+        {showDashboard && data.length > 0 && (
+          <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 transition-all">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 size={20} className="text-blue-600 dark:text-blue-400" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">ภาพรวมสถิติ</h3>
+              </div>
+              <button
+                onClick={() => setShowDashboard(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Location Distribution */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">การกระจายตามสถานที่</h4>
+                {(() => {
+                  const locationCounts = data.reduce((acc, item) => {
+                    acc[item.location] = (acc[item.location] || 0) + 1;
+                    return acc;
+                  }, {});
+                  const maxCount = Math.max(...Object.values(locationCounts));
+
+                  return (
+                    <div className="space-y-2">
+                      {Object.entries(locationCounts).slice(0, 5).map(([loc, count]) => (
+                        <div key={loc} className="flex items-center gap-2">
+                          <div className="text-xs text-gray-600 dark:text-gray-400 w-24 truncate" title={loc}>{loc}</div>
+                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                            <div
+                              className="bg-blue-500 dark:bg-blue-400 h-full transition-all duration-500 flex items-center justify-end pr-2"
+                              style={{ width: `${(count / maxCount) * 100}%` }}
+                            >
+                              <span className="text-xs text-white font-medium">{count}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Hazard Distribution */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">การกระจาย GHS</h4>
+                {(() => {
+                  const ghsCounts = GHS_CONFIG.map(g => ({
+                    ...g,
+                    count: data.filter(item => item.ghs && item.ghs[g.key]).length
+                  })).filter(g => g.count > 0).sort((a, b) => b.count - a.count);
+                  const maxCount = Math.max(...ghsCounts.map(g => g.count));
+
+                  return (
+                    <div className="space-y-2">
+                      {ghsCounts.slice(0, 5).map((ghs) => (
+                        <div key={ghs.key} className="flex items-center gap-2">
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            <ghs.icon size={14} className={ghs.color} />
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400 w-20 truncate" title={ghs.label}>{ghs.label}</div>
+                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-500 flex items-center justify-end pr-2 ${ghs.bg}`}
+                              style={{ width: `${(ghs.count / maxCount) * 100}%` }}
+                            >
+                              <span className="text-xs text-gray-800 dark:text-gray-200 font-medium">{ghs.count}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!showDashboard && data.length > 0 && (
+          <button
+            onClick={() => setShowDashboard(true)}
+            className="mb-6 w-full p-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+          >
+            <BarChart3 size={18} />
+            <span className="text-sm font-medium">แสดงภาพรวมสถิติ</span>
+          </button>
+        )}
+
         {/* Filters */}
-        <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col gap-2 md:gap-3 sticky top-16 z-20 md:static">
+        <div className="bg-white dark:bg-slate-800 p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 flex flex-col gap-2 md:gap-3 sticky top-16 z-20 md:static transition-all">
 
           {/* Top Row: Search */}
           <div className="relative w-full">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500" size={18} />
             <input
               type="text"
               placeholder="ค้นหาชื่อ, ID, หรือ CAS..."
-              className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+              className="w-full pl-10 pr-10 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-600 transition-all text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X size={16} />
               </button>
@@ -427,7 +629,7 @@ const ChemicalInventoryApp = () => {
             {/* Location Filter */}
             <div className="relative">
               <select
-                className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer"
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100"
                 value={filterLocation}
                 onChange={(e) => setFilterLocation(e.target.value)}
               >
@@ -435,13 +637,13 @@ const ChemicalInventoryApp = () => {
                   <option key={loc} value={loc}>{loc === 'All' ? 'ทุกสถานที่' : loc}</option>
                 ))}
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
             </div>
 
             {/* Status Filter */}
             <div className="relative">
               <select
-                className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer"
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
@@ -451,13 +653,13 @@ const ChemicalInventoryApp = () => {
                 <option value="Dispose">ส่งกำจัด</option>
                 <option value="Donate">บริจาค</option>
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
             </div>
 
             {/* GHS Filter */}
             <div className="relative">
               <select
-                className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer"
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100"
                 value={filterGHS}
                 onChange={(e) => setFilterGHS(e.target.value)}
               >
@@ -472,13 +674,13 @@ const ChemicalInventoryApp = () => {
                 <option value="health">อันตรายต่อสุขภาพ</option>
                 <option value="env">อันตรายต่อสิ่งแวดล้อม</option>
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
             </div>
 
             {/* Expiration Note Filter */}
             <div className="relative">
               <select
-                className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer"
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100"
                 value={filterExpNote}
                 onChange={(e) => setFilterExpNote(e.target.value)}
               >
@@ -487,7 +689,7 @@ const ChemicalInventoryApp = () => {
                   <option key={note} value={note}>{note}</option>
                 ))}
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
             </div>
 
             {/* Refresh Button */}
@@ -508,7 +710,7 @@ const ChemicalInventoryApp = () => {
                     setIsLoading(false);
                   });
               }}
-              className="flex items-center justify-center gap-2 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-gray-50 col-span-1"
+              className="flex items-center justify-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 col-span-1"
               title="รีเฟรชข้อมูล"
             >
               <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
@@ -518,7 +720,7 @@ const ChemicalInventoryApp = () => {
             {/* Reset Filters Button */}
             <button
               onClick={handleResetFilters}
-              className="flex items-center justify-center gap-2 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-white col-span-1"
+              className="flex items-center justify-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 col-span-1"
               title="ล้างตัวกรอง"
             >
               <X size={16} />
@@ -530,9 +732,9 @@ const ChemicalInventoryApp = () => {
 
         {/* Content Area */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <Loader2 size={48} className="animate-spin mb-4 text-blue-500" />
-            <p>กำลังโหลดข้อมูล...</p>
+          <div className="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-gray-500">
+            <Loader2 size={48} className="animate-spin mb-4 text-blue-500 dark:text-blue-400" />
+            <p className="text-gray-600 dark:text-gray-400">กำลังโหลดข้อมูล...</p>
           </div>
         ) : filteredData.length > 0 ? (
           <>
@@ -549,42 +751,42 @@ const ChemicalInventoryApp = () => {
             </div>
 
             {/* Desktop View: Table */}
-            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="hidden md:block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold tracking-wider sticky top-0 z-10">
+                  <thead className="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs uppercase font-semibold tracking-wider sticky top-0 z-10">
                     <tr>
-                      <th className="p-4 border-b w-[10%]">ID</th>
-                      <th className="p-4 border-b w-[25%]">ชื่อสารเคมี / CAS</th>
-                      <th className="p-4 border-b w-[15%]">ปริมาณ</th>
-                      <th className="p-4 border-b w-[15%]">ที่เก็บ</th>
-                      <th className="p-4 border-b text-center w-[10%]">หมายเหตุ</th>
-                      <th className="p-4 border-b text-center w-[10%]">GHS</th>
-                      <th className="p-4 border-b text-center w-[10%]">สถานะ</th>
-                      <th className="p-4 border-b text-right w-[5%]">จัดการ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[10%]">ID</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[25%]">ชื่อสารเคมี / CAS</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[15%]">ปริมาณ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[15%]">ที่เก็บ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">หมายเหตุ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">GHS</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">สถานะ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-right w-[5%]">จัดการ</th>
                     </tr>
                   </thead>
-                  <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
+                  <tbody className="text-sm text-gray-700 dark:text-gray-300 divide-y divide-gray-100 dark:divide-gray-700">
                     {filteredData.map((item) => (
-                      <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="p-4 font-mono font-medium text-blue-600 whitespace-nowrap">{item.id}</td>
+                      <tr key={item.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/20 transition-colors">
+                        <td className="p-4 font-mono font-medium text-blue-600 dark:text-blue-400 whitespace-nowrap">{item.id}</td>
                         <td className="p-4">
-                          <div className="font-bold text-gray-800">{item.name}</div>
-                          <div className="text-xs text-gray-500 font-mono mt-0.5">{item.cas}</div>
-                          {item.hazard !== '-' && <div className="text-xs text-orange-600 mt-1 bg-orange-50 inline-block px-1 rounded">{item.hazard}</div>}
+                          <div className="font-bold text-gray-800 dark:text-gray-100">{item.name}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-0.5">{item.cas}</div>
+                          {item.hazard !== '-' && <div className="text-xs text-orange-600 dark:text-orange-400 mt-1 bg-orange-50 dark:bg-orange-900/30 inline-block px-1 rounded">{item.hazard}</div>}
                         </td>
                         <td className="p-4 whitespace-nowrap">
-                          <div className="text-gray-900 font-medium">{item.remaining}</div>
-                          <div className="text-xs text-gray-400">Exp: {item.expiry}</div>
+                          <div className="text-gray-900 dark:text-gray-100 font-medium">{item.remaining}</div>
+                          <div className="text-xs text-gray-400 dark:text-gray-500">Exp: {item.expiry}</div>
                         </td>
-                        <td className="p-4">{item.location}</td>
+                        <td className="p-4 text-gray-700 dark:text-gray-300">{item.location}</td>
                         <td className="p-4 text-center">
                           {item.expirationNote && item.expirationNote !== '-' ? (
-                            <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded inline-block max-w-[150px] truncate" title={item.expirationNote}>
+                            <div className="text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded inline-block max-w-[150px] truncate" title={item.expirationNote}>
                               {item.expirationNote}
                             </div>
                           ) : (
-                            <span className="text-gray-300">-</span>
+                            <span className="text-gray-300 dark:text-gray-600">-</span>
                           )}
                         </td>
                         <td className="p-4 text-center min-w-[120px]">
@@ -599,14 +801,14 @@ const ChemicalInventoryApp = () => {
                           <div className="flex justify-end gap-2">
                             <button
                               onClick={() => handleEdit(item)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                              className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                               title="แก้ไข"
                             >
                               <Edit size={18} />
                             </button>
                             <button
                               onClick={() => handleDelete(item.id)}
-                              className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                              className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                               title="ลบ"
                             >
                               <Trash2 size={18} />
@@ -618,15 +820,15 @@ const ChemicalInventoryApp = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="p-4 border-t border-gray-200 text-xs text-gray-500 flex justify-between items-center bg-gray-50">
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex justify-between items-center bg-gray-50 dark:bg-gray-700/50">
                 <span>แสดง {filteredData.length} รายการ จากทั้งหมด {data.length}</span>
               </div>
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-400 bg-white rounded-xl border border-dashed border-gray-300">
+          <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 transition-colors">
             <FileSpreadsheet size={48} className="mb-3 opacity-50" />
-            <p>ไม่พบข้อมูลที่ค้นหา</p>
+            <p className="text-gray-600 dark:text-gray-400">ไม่พบข้อมูลที่ค้นหา</p>
           </div>
         )}
 
