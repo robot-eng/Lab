@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search, Filter, AlertTriangle, Beaker, Flame, Skull, Droplet, Wind, CircleDot, Bug, AlertCircle,
-  FileSpreadsheet, Plus, Trash2, Edit, X, Save, Check, FileText, ChevronDown, ChevronUp, Settings, Loader2, RefreshCw
+  FileSpreadsheet, Plus, Trash2, Edit, X, Save, Check, FileText, ChevronDown, ChevronUp, Settings, Loader2, RefreshCw, Eye, EyeOff
 } from 'lucide-react';
 import { githubService } from './services/githubService';
 
@@ -19,12 +19,18 @@ const EMPTY_FORM = {
   cas: "",
   hazard: "",
   remaining: "",
-  location: "Storage 1",
+  location: "",
   expiry: "",
   expirationNote: "",
   status: "Ready",
   ghs: { explosive: false, flammable: false, oxidizing: false, gas: false, corrosive: false, toxic: false, irritant: false, health: false, env: false }
 };
+
+const HAZARD_OPTIONS = [
+  "สารกัดกร่อน", "สารไวไฟ", "สารมีพิษ", "สารระคายเคือง",
+  "วัตถุระเบิด", "สารออกซิไดส์", "ก๊าซภายใต้ความดัน",
+  "อันตรายต่อสุขภาพ", "อันตรายต่อสิ่งแวดล้อม"
+];
 
 // --- 2. Utility Components ---
 
@@ -162,6 +168,7 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
 // --- Settings Modal ---
 const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
   const [localConfig, setLocalConfig] = useState(config);
+  const [showToken, setShowToken] = useState(false);
 
   useEffect(() => {
     if (isOpen) setLocalConfig(config);
@@ -197,22 +204,35 @@ const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">GitHub Username (Owner)</label>
             <input
               type="text" name="owner" value={localConfig.owner} onChange={handleChange}
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. yourusername"
+              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-normal" placeholder="e.g. yourusername"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Repository Name</label>
             <input
               type="text" name="repo" value={localConfig.repo} onChange={handleChange}
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. chemical-inventory"
+              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-normal" placeholder="e.g. chemical-inventory"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Personal Access Token</label>
-            <input
-              type="password" name="token" value={localConfig.token} onChange={handleChange}
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="ghp_xxxxxxxxxxxx"
-            />
+            <div className="relative">
+              <input
+                type={showToken ? "text" : "password"}
+                name="token"
+                value={localConfig.token}
+                onChange={handleChange}
+                className="w-full p-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-normal"
+                placeholder="ghp_xxxxxxxxxxxx"
+              />
+              <button
+                type="button"
+                onClick={() => setShowToken(!showToken)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+              >
+                {showToken ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             <p className="text-xs text-gray-400 mt-1">ต้องมีสิทธิ์ (Scope) 'repo' หรือ 'public_repo'</p>
           </div>
           <div className="flex justify-end gap-2 mt-4">
@@ -245,6 +265,9 @@ const ChemicalInventoryApp = () => {
   // UI State
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLocation, setFilterLocation] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterGHS, setFilterGHS] = useState("All");
+  const [filterExpNote, setFilterExpNote] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -337,6 +360,11 @@ const ChemicalInventoryApp = () => {
     return Array.from(notes).sort();
   }, [data]);
 
+  const uniqueExpirationNotes = useMemo(() => {
+    const notes = new Set(data.map(d => d.expirationNote).filter(n => n && n !== '-'));
+    return ["All", ...Array.from(notes).sort()];
+  }, [data]);
+
   const formHazards = useMemo(() => {
     const hazards = new Set(data.map(d => d.hazard).filter(h => h && h !== '-'));
     return Array.from(hazards).sort();
@@ -348,7 +376,11 @@ const ChemicalInventoryApp = () => {
       item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.cas.includes(searchTerm);
     const matchesLocation = filterLocation === "All" || item.location === filterLocation;
-    return matchesSearch && matchesLocation;
+    const matchesStatus = filterStatus === "All" || item.status === filterStatus;
+    const matchesGHS = filterGHS === "All" || (item.ghs && item.ghs[filterGHS]);
+    const matchesExpNote = filterExpNote === "All" || item.expirationNote === filterExpNote;
+
+    return matchesSearch && matchesLocation && matchesStatus && matchesGHS && matchesExpNote;
   });
 
   const stats = {
@@ -398,6 +430,17 @@ const ChemicalInventoryApp = () => {
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleHazardToggle = (hazard) => {
+    const currentHazards = formData.hazard ? formData.hazard.split(',').map(s => s.trim()).filter(Boolean) : [];
+    let newHazards;
+    if (currentHazards.includes(hazard)) {
+      newHazards = currentHazards.filter(h => h !== hazard);
+    } else {
+      newHazards = [...currentHazards, hazard];
+    }
+    setFormData(prev => ({ ...prev, hazard: newHazards.join(', ') }));
   };
 
   const handleGhsToggle = (key) => {
@@ -496,23 +539,27 @@ const ChemicalInventoryApp = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-3 justify-between items-center sticky top-16 z-20 md:static">
-          <div className="relative w-full md:w-96">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col gap-3 sticky top-16 z-20 md:static">
+
+          {/* Top Row: Search */}
+          <div className="relative w-full">
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="ค้นหา..."
+              placeholder="ค้นหาชื่อ, ID, หรือ CAS..."
               className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div className="flex gap-2 w-full md:w-auto items-center">
-            <div className="relative w-full md:w-auto">
-              <Filter size={16} className="absolute left-3 top-3 text-gray-500 pointer-events-none" />
+          {/* Bottom Row: Dropdowns */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+
+            {/* Location Filter */}
+            <div className="relative">
               <select
-                className="w-full md:w-48 pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer"
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer"
                 value={filterLocation}
                 onChange={(e) => setFilterLocation(e.target.value)}
               >
@@ -520,15 +567,71 @@ const ChemicalInventoryApp = () => {
                   <option key={loc} value={loc}>{loc === 'All' ? 'ทุกสถานที่' : loc}</option>
                 ))}
               </select>
-              <ChevronDown size={16} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
             </div>
+
+            {/* Status Filter */}
+            <div className="relative">
+              <select
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="All">ทุกสถานะ</option>
+                <option value="Ready">พร้อมใช้งาน</option>
+                <option value="Not Ready">ไม่พร้อมใช้งาน</option>
+                <option value="Dispose">ส่งกำจัด</option>
+                <option value="Donate">บริจาค</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* GHS Filter */}
+            <div className="relative">
+              <select
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer"
+                value={filterGHS}
+                onChange={(e) => setFilterGHS(e.target.value)}
+              >
+                <option value="All">ทุกอันตราย (GHS)</option>
+                <option value="explosive">วัตถุระเบิด</option>
+                <option value="flammable">สารไวไฟ</option>
+                <option value="oxidizing">สารออกซิไดส์</option>
+                <option value="gas">ก๊าซภายใต้ความดัน</option>
+                <option value="corrosive">สารกัดกร่อน</option>
+                <option value="toxic">สารมีพิษ</option>
+                <option value="irritant">สารระคายเคือง</option>
+                <option value="health">อันตรายต่อสุขภาพ</option>
+                <option value="env">อันตรายต่อสิ่งแวดล้อม</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Expiration Note Filter */}
+            <div className="relative">
+              <select
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none cursor-pointer"
+                value={filterExpNote}
+                onChange={(e) => setFilterExpNote(e.target.value)}
+              >
+                <option value="All">ทุกหมายเหตุ</option>
+                {uniqueExpirationNotes.filter(n => n !== 'All').map(note => (
+                  <option key={note} value={note}>{note}</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Refresh Button */}
             <button
               onClick={loadData}
-              className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-gray-50"
+              className="flex items-center justify-center gap-2 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-gray-50 col-span-2 md:col-span-1"
               title="รีเฟรชข้อมูล"
             >
-              <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+              <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+              <span className="md:hidden text-xs font-medium">รีเฟรชข้อมูล</span>
             </button>
+
           </div>
         </div>
 
@@ -562,7 +665,7 @@ const ChemicalInventoryApp = () => {
                       <th className="p-4 border-b">ชื่อสารเคมี / CAS</th>
                       <th className="p-4 border-b">ปริมาณ</th>
                       <th className="p-4 border-b">ที่เก็บ</th>
-                      <th className="p-4 border-b text-center">กรณีสารหมดอายุ</th>
+                      <th className="p-4 border-b text-center">หมายเหตุ</th>
                       <th className="p-4 border-b text-center">GHS</th>
                       <th className="p-4 border-b text-center">สถานะ</th>
                       <th className="p-4 border-b text-right">จัดการ</th>
@@ -637,9 +740,9 @@ const ChemicalInventoryApp = () => {
         {/* Modal Form */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 z-50">
-            <div className="bg-white w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[95vh] md:max-h-[90vh] animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-5 duration-300">
+            <div className="bg-white w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
 
-              <form onSubmit={handleFormSubmit} className="flex flex-col h-full">
+              <form onSubmit={handleFormSubmit} className="flex flex-col h-full min-h-0">
                 {/* Modal Header */}
                 <div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-100 shrink-0">
                   <div>
@@ -658,7 +761,7 @@ const ChemicalInventoryApp = () => {
                 </div>
 
                 {/* Modal Body - Scrollable */}
-                <div className="p-4 md:p-6 overflow-y-auto flex-1">
+                <div className="p-4 md:p-6 overflow-y-auto flex-1 min-h-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     {/* ID */}
@@ -684,7 +787,7 @@ const ChemicalInventoryApp = () => {
                         name="cas"
                         value={formData.cas}
                         onChange={handleFormChange}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                         placeholder="เช่น 7783-20-2"
                       />
                     </div>
@@ -698,7 +801,7 @@ const ChemicalInventoryApp = () => {
                         value={formData.name}
                         onChange={handleFormChange}
                         required
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                         placeholder="ระบุชื่อสารเคมีภาษาอังกฤษ"
                       />
                     </div>
@@ -706,19 +809,14 @@ const ChemicalInventoryApp = () => {
                     {/* Location */}
                     <div className="md:col-span-1">
                       <label className="block text-xs font-semibold text-gray-700 mb-1.5">สถานที่จัดเก็บ</label>
-                      <div className="relative">
-                        <input
-                          list="location-options"
-                          name="location"
-                          value={formData.location}
-                          onChange={handleFormChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                          placeholder="เลือกหรือพิมพ์ใหม่"
-                        />
-                        <datalist id="location-options">
-                          {formLocations.map(loc => <option key={loc} value={loc} />)}
-                        </datalist>
-                      </div>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleFormChange}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
+                        placeholder="เช่น Storage 1, ห้องเก็บของ 2"
+                      />
                     </div>
 
                     {/* Status */}
@@ -729,7 +827,7 @@ const ChemicalInventoryApp = () => {
                           name="status"
                           value={formData.status}
                           onChange={handleFormChange}
-                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white appearance-none"
+                          className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white appearance-none font-normal"
                         >
                           <option value="Ready">พร้อมใช้งาน</option>
                           <option value="Not Ready">ไม่พร้อมใช้งาน</option>
@@ -749,7 +847,7 @@ const ChemicalInventoryApp = () => {
                         value={formData.remaining}
                         onChange={handleFormChange}
                         placeholder="เช่น 500 g"
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
                     </div>
                     <div className="md:col-span-1">
@@ -759,8 +857,8 @@ const ChemicalInventoryApp = () => {
                         name="expiry"
                         value={formData.expiry}
                         onChange={handleFormChange}
-                        placeholder="เช่น พ.ค.-26"
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                        placeholder="เช่น พ.ค.-26 หรือ 9/11/2024"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
                     </div>
 
@@ -768,37 +866,30 @@ const ChemicalInventoryApp = () => {
                     <div className="md:col-span-2">
                       <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1">
                         <FileText size={14} className="text-gray-400" />
-                        กรณีสารหมดอายุ (Expiration Note)
+                        กรณีสารหมดอายุ/หมายเหตุ
                       </label>
                       <input
-                        list="expiration-notes"
                         type="text"
                         name="expirationNote"
                         value={formData.expirationNote}
                         onChange={handleFormChange}
-                        placeholder="เช่น ส่งกำจัดที่ตึก B, รอการบริจาค"
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                        placeholder="เช่น ส่งกำจัดที่ตึก B, รอการบริจาค, หมายเหตุเพิ่มเติม"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
-                      <datalist id="expiration-notes">
-                        {formExpirationNotes.map(note => <option key={note} value={note} />)}
-                      </datalist>
                     </div>
 
                     {/* Hazard Text */}
                     <div className="md:col-span-2">
                       <label className="block text-xs font-semibold text-gray-700 mb-1.5">คำอธิบายความเป็นอันตราย (Hazard Text)</label>
+
                       <input
-                        list="hazard-options"
                         type="text"
                         name="hazard"
                         value={formData.hazard}
                         onChange={handleFormChange}
-                        placeholder="เช่น สารกัดกร่อน, สารไวไฟ"
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                        placeholder="เช่น ระวังเข้าตา, ห้ามสูดดม"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
-                      <datalist id="hazard-options">
-                        {formHazards.map(h => <option key={h} value={h} />)}
-                      </datalist>
                     </div>
 
                     {/* GHS Checkboxes */}
