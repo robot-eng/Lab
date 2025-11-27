@@ -7,9 +7,9 @@ import { githubService } from './services/githubService';
 
 // --- 1. Constants & Config ---
 const DEFAULT_CONFIG = {
-  owner: "",
-  repo: "",
-  token: "",
+  owner: "robot-eng",        // ✅ OK
+  repo: "Lab",               // ✅ OK
+  token: "",                 // ⚠️ ให้ว่างไว้
   path: "public/data.json"
 };
 
