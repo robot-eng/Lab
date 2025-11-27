@@ -676,7 +676,7 @@ const ChemicalInventoryApp = () => {
             <Search className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500" size={18} />
             <input
               type="text"
-              placeholder="ค้นหาชื่อ, ID, หรือ CAS..."
+              placeholder="ค้นหาชื่อหรือ keyword สำหรับชื่อสาร, ID, และ CAS เท่านั้น"
               className="w-full pl-10 pr-10 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-600 transition-all text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
