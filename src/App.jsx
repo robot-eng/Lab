@@ -230,19 +230,24 @@ const ChemicalInventoryApp = () => {
     setError(null);
 
     try {
-      const now = new Date();
-      const day = String(now.getDate()).padStart(2, '0');
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const year = now.getFullYear();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
+      // Data Cleaning & Validation
+      const cleanId = formData.id.trim();
+      const cleanName = formData.name.trim();
 
-      const currentDateTime = `${day}/${month}/${year} at ${hours}:${minutes}`;
+      if (!cleanId || !cleanName) {
+        throw new Error("โปรดระบุ Bottle ID และชื่อสารเคมี");
+      }
+
+      if (/[.#$[\]]/.test(cleanId)) {
+        throw new Error("Bottle ID ห้ามมีตัวอักขระพิเศษ . # $ [ ]");
+      }
 
       let finalFormData = {
         ...formData,
-        lastUpdated: currentDateTime,
-        updatedAt: Date.now()
+        id: cleanId,
+        name: cleanName,
+        // Remove old string-based timestamp to rely on server synchronization
+        lastUpdated: null
       };
 
       // Enforce Auto-Expiry Logic on Save
@@ -254,12 +259,11 @@ const ChemicalInventoryApp = () => {
       }
 
       if (isEditing) {
-        // Atomic Update
         await firebaseService.saveItem(finalFormData);
       } else {
-        // Check if ID exists before adding new
-        if (data.some(item => item.id === formData.id)) {
-          throw new Error(`ID ${formData.id} already exists. Please use a different ID.`);
+        // Strict ID check (case-insensitive) for new entries
+        if (data.some(item => item.id.trim().toLowerCase() === cleanId.toLowerCase())) {
+          throw new Error(`ID ${cleanId} มีในระบบอยู่แล้ว โปรดใช้ ID อื่น`);
         }
         await firebaseService.saveItem(finalFormData);
       }
@@ -294,10 +298,12 @@ const ChemicalInventoryApp = () => {
   const toggleDanger = async (item) => {
     const newSignalWord = item.signalWord === "Danger" ? "-" : "Danger";
     try {
-      await firebaseService.saveItem({ ...item, signalWord: newSignalWord });
+      // Remove legacy string-based timestamp to rely on server synchronization
+      const { lastUpdated, ...cleanItem } = item;
+      await firebaseService.saveItem({ ...cleanItem, signalWord: newSignalWord });
     } catch (err) {
       console.error("Toggle danger error:", err);
-      setError("Failed to update status");
+      setError("ไม่สามารถอัปเดตสถานะได้");
     }
   };
 
@@ -513,17 +519,23 @@ const ChemicalInventoryApp = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Status Indicator */}
-              {isSaving ? (
-                <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full">
-                  <Loader2 size={12} className="animate-spin" /> Saving...
+            <div className="flex items-center gap-3">
+              {/* Status & Sync Indicator */}
+              <div className="flex flex-col items-end">
+                {isSaving ? (
+                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-800/50 animate-pulse">
+                    <Loader2 size={12} className="animate-spin" /> Saving...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded-full border border-green-100 dark:border-green-800/50">
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online
+                  </div>
+                )}
+                <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
+                  <RefreshCw size={10} className={isLoading ? "animate-spin" : ""} />
+                  Updated: {overallLastUpdated}
                 </div>
-              ) : (
-                <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online
-                </div>
-              )}
+              </div>
 
               {/* Dark Mode Toggle */}
               <button

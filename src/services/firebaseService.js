@@ -1,4 +1,4 @@
-import { ref, get, set, update, remove, onValue } from 'firebase/database';
+import { ref, get, set, update, remove, onValue, serverTimestamp } from 'firebase/database';
 import { database } from './firebase';
 
 /**
@@ -47,7 +47,14 @@ export const firebaseService = {
             // Clean ID for Firebase key (remove special characters if any)
             const cleanId = item.id.replace(/[.#$[\]]/g, '_');
             const itemRef = ref(database, `chemicals/${cleanId}`);
-            await set(itemRef, item);
+
+            // Inject server timestamp for global synchronization
+            const itemWithTimestamp = {
+                ...item,
+                updatedAt: serverTimestamp()
+            };
+
+            await set(itemRef, itemWithTimestamp);
         } catch (error) {
             console.error('Error saving item to Firebase:', error);
             throw error;
