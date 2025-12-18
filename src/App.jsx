@@ -54,53 +54,59 @@ const GHSIcons = ({ ghs, size = 16 }) => {
 const ChemicalCard = ({ item, onEdit, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Status Border Accent
+  const statusColor = item.status === 'Ready' ? 'border-l-green-500' :
+    item.status === 'Expired' ? 'border-l-red-500' :
+      item.status === 'Dispose' ? 'border-l-yellow-500' :
+        'border-l-gray-300';
+
   return (
-    <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-3 flex flex-col gap-3 transition-colors">
+    <div className={`bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md border-y border-r border-gray-100 dark:border-gray-700/50 mb-4 flex flex-col gap-3 transition-all active:scale-[0.98] border-l-4 ${statusColor}`}>
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="font-mono text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800 whitespace-nowrap">{item.id}</span>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className="font-mono text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-800/50 whitespace-nowrap shadow-sm">{item.id}</span>
             <StatusBadge status={item.status} />
             <SignalWordBadge word={item.signalWord} />
           </div>
-          <h3 className="font-extrabold text-gray-900 dark:text-gray-100 text-lg leading-tight mb-1">{item.name}</h3>
-          <div className={`text-xs font-mono flex items-center gap-1 ${item.cas && !isValidCAS(item.cas) ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>
-            <FileText size={10} /> CAS: {item.cas || "N/A"}
-            {item.cas && !isValidCAS(item.cas) && <AlertCircle size={10} title="Invalid CAS Format" />}
+          <h3 className="font-black text-gray-900 dark:text-gray-100 text-xl leading-tight mb-1 antialiased tracking-tight">{item.name}</h3>
+          <div className={`text-xs font-mono flex items-center gap-1.5 ${item.cas && !isValidCAS(item.cas) ? 'text-red-600 font-bold' : 'text-gray-500 dark:text-gray-400'}`}>
+            <span className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-400">CAS</span> {item.cas || "N/A"}
+            {item.cas && !isValidCAS(item.cas) && <AlertCircle size={12} className="animate-pulse" />}
           </div>
         </div>
-        <div className="flex gap-1 shrink-0 ml-2">
+        <div className="flex flex-col gap-2 shrink-0 ml-2">
           <button
             onClick={() => onEdit(item)}
-            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors"
+            className="p-2.5 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-xl hover:bg-blue-100 transition-colors shadow-sm"
           >
-            <Edit size={18} />
+            <Edit size={20} />
           </button>
           <button
             onClick={() => onDelete(item.id)}
-            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors"
+            className="p-2.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-xl hover:bg-red-100 transition-colors shadow-sm"
           >
-            <Trash2 size={18} />
+            <Trash2 size={20} />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-3 rounded border border-gray-100 dark:border-gray-600">
-        <div>
-          <span className="text-xs text-gray-500 dark:text-gray-400 block">Quantity</span>
-          <span className="font-medium">{item.remaining || "-"}</span>
+      <div className="grid grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300 bg-slate-50/80 dark:bg-slate-900/50 p-4 rounded-2xl border border-gray-100/50 dark:border-gray-700/50 backdrop-blur-sm">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-tighter">Current Quantity</span>
+          <span className="font-bold text-gray-900 dark:text-gray-100">{item.remaining || "-"}</span>
         </div>
-        <div>
-          <span className="text-xs text-gray-500 dark:text-gray-400 block">Location</span>
-          <span className="font-medium">{item.location}</span>
+        <div className="flex flex-col gap-0.5 text-right">
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-tighter">Lab Location</span>
+          <span className="font-bold text-gray-900 dark:text-gray-100 truncate">{item.location}</span>
         </div>
-        <div>
-          <span className="text-xs text-gray-500 dark:text-gray-400 block">Import Date</span>
-          <span className="font-medium">{item.importDate || "-"}</span>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-tighter">Imported On</span>
+          <span className="font-medium text-gray-600 dark:text-gray-400">{item.importDate || "-"}</span>
         </div>
-        <div>
-          <span className="text-xs text-gray-500 dark:text-gray-400 block">Expiry Date</span>
-          <span className={`font-medium ${item.status === 'Expired' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
+        <div className="flex flex-col gap-0.5 text-right">
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-tighter">Best Before</span>
+          <span className={`font-bold ${item.status === 'Expired' ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-gray-900 dark:text-gray-100'}`}>
             {item.expiry || "-"}
           </span>
         </div>
@@ -108,34 +114,34 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
 
       {/* Expandable Details */}
       {isExpanded && (
-        <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex flex-col gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="pt-3 border-t border-gray-100 dark:border-gray-700/50 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300 ease-out">
           {item.hazard !== '-' && (
-            <div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 block">Hazard</span>
-              <span className="text-sm text-orange-700 dark:text-orange-400">{item.hazard}</span>
+            <div className="p-3 bg-orange-50/50 dark:bg-orange-900/10 rounded-xl border border-orange-100/50 dark:border-orange-900/30">
+              <span className="text-[10px] text-orange-600 dark:text-orange-400 font-black uppercase tracking-widest block mb-1">Hazard Warnings</span>
+              <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">{item.hazard}</span>
             </div>
           )}
           {item.expirationNote && item.expirationNote !== '-' && (
-            <div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 block">Expiration Note</span>
-              <span className="text-sm text-gray-700 dark:text-gray-300 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded inline-block">{item.expirationNote}</span>
+            <div className="p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100/50 dark:border-blue-900/30">
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-black uppercase tracking-widest block mb-1">Logistics Note</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{item.expirationNote}</span>
             </div>
           )}
-          <div>
-            <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">GHS</span>
-            <GHSIcons ghs={item.ghs} size={20} />
+          <div className="px-1">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest block mb-2">GHS Pictograms</span>
+            <GHSIcons ghs={item.ghs} size={28} />
           </div>
         </div>
       )}
 
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full py-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 flex items-center justify-center gap-1 transition-colors"
+        className="w-full py-2 bg-gray-50 dark:bg-slate-900/20 rounded-xl text-xs font-black text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-center gap-1.5 transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900/50"
       >
         {isExpanded ? (
-          <>Hide Details <ChevronUp size={14} /></>
+          <>Collapse Record <ChevronUp size={16} /></>
         ) : (
-          <>Show More <ChevronDown size={14} /></>
+          <>View Full Record <ChevronDown size={16} /></>
         )}
       </button>
     </div>
@@ -466,9 +472,9 @@ const ChemicalInventoryApp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-20 md:pb-0 transition-colors duration-200">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a] font-sans pb-20 md:pb-0 transition-colors duration-300">
       {/* Top Navigation Bar */}
-      <nav className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 transition-colors duration-200">
+      <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-40 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
@@ -576,7 +582,7 @@ const ChemicalInventoryApp = () => {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto p-4 md:p-8">
+      <div className="max-w-[1600px] mx-auto p-4 md:p-8 lg:p-12">
 
         {/* Safety Awareness Banner */}
         {stats.danger > 0 && (
@@ -610,49 +616,65 @@ const ChemicalInventoryApp = () => {
           </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+        {/* Stats Grid - Ultra Responsive */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
           <button
             onClick={() => handleStatClick('all', null)}
-            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
+            className="group relative bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all text-left overflow-hidden"
           >
-            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">Total Inventory</div>
-            <div className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{stats.total}</div>
-          </button>
-          <button
-            onClick={() => handleStatClick('status', 'Ready')}
-            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
-          >
-            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">Available</div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{stats.ready}</div>
-          </button>
-          <button
-            onClick={() => handleStatClick('status', 'Dispose')}
-            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
-          >
-            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">To Dispose</div>
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">{stats.dispose}</div>
-          </button>
-          <button
-            onClick={() => handleStatClick('ghs', 'flammable')}
-            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
-          >
-            <div className="text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
-              <Flame size={12} /> Flammable
+            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-bl-[40px] flex items-center justify-center transition-colors group-hover:bg-blue-100 dark:group-hover:bg-blue-800/30">
+              <Beaker size={20} className="text-blue-600 dark:text-blue-400" />
             </div>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{stats.flammable}</div>
+            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Total Inventory</div>
+            <div className="text-3xl font-black text-gray-900 dark:text-gray-100">{stats.total}</div>
           </button>
 
-          <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-xl shadow-sm border border-red-100 dark:border-red-900/30 flex flex-col justify-between transition-all">
-            <div className="text-red-700 dark:text-red-400 text-[10px] font-black uppercase tracking-widest">Safety: Danger</div>
-            <div className="text-2xl font-extrabold text-red-700 dark:text-red-400 mt-1">{stats.danger}</div>
+          <button
+            onClick={() => handleStatClick('status', 'Ready')}
+            className="group relative bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all text-left overflow-hidden border-l-4 border-l-green-500"
+          >
+            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Available</div>
+            <div className="text-3xl font-black text-green-600 dark:text-green-400">{stats.ready}</div>
+            <div className="mt-2 h-1 w-full bg-green-100 dark:bg-green-900/30 rounded-full overflow-hidden">
+              <div className="h-full bg-green-500 transition-all duration-1000" style={{ width: `${(stats.ready / (stats.total || 1)) * 100}%` }}></div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleStatClick('status', 'Dispose')}
+            className="group relative bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all text-left overflow-hidden border-l-4 border-l-yellow-500"
+          >
+            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">To Dispose</div>
+            <div className="text-3xl font-black text-yellow-600 dark:text-yellow-400">{stats.dispose}</div>
+            <div className="mt-2 h-1 w-full bg-yellow-100 dark:bg-yellow-900/30 rounded-full overflow-hidden">
+              <div className="h-full bg-yellow-500 transition-all duration-1000" style={{ width: `${(stats.dispose / (stats.total || 1)) * 100}%` }}></div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleStatClick('ghs', 'flammable')}
+            className="group relative bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all text-left overflow-hidden border-l-4 border-l-red-500"
+          >
+            <div className="text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 mb-1">
+              <Flame size={12} /> Flammable
+            </div>
+            <div className="text-3xl font-black text-red-600 dark:text-red-400">{stats.flammable}</div>
+          </button>
+
+          <div className="bg-red-600 p-5 rounded-2xl shadow-lg border border-red-700 flex flex-col justify-between transition-all hover:scale-[1.02]">
+            <div className="text-red-100 text-[10px] font-black uppercase tracking-widest mb-1">Safety: Danger</div>
+            <div className="text-3xl font-black text-white">{stats.danger}</div>
+            <div className="mt-2 text-[10px] text-red-100 font-bold flex items-center gap-1 italic">
+              <AlertTriangle size={10} /> Requires Attention
+            </div>
           </div>
+
           <button
             onClick={() => handleStatClick('status', 'Expired')}
-            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
+            className="group relative bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all text-left overflow-hidden border-l-4 border-l-red-800"
           >
-            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">Expired</div>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{stats.expired}</div>
+            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Expired</div>
+            <div className="text-3xl font-black text-red-800 dark:text-red-500">{stats.expired}</div>
           </button>
         </div>
 
@@ -758,8 +780,8 @@ const ChemicalInventoryApp = () => {
           </button>
         )}
 
-        {/* Filters */}
-        <div id="filter-section" className="bg-white dark:bg-slate-800 p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 flex flex-col gap-2 md:gap-3 sticky top-16 z-20 md:static transition-all">
+        {/* Filters - Glass Panel */}
+        <div id="filter-section" className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md p-4 md:p-6 rounded-2xl shadow-lg border border-white dark:border-gray-700/50 mb-8 flex flex-col gap-4 sticky top-20 z-20 md:static transition-all ring-1 ring-black/5 dark:ring-white/5">
 
           {/* Top Row: Search */}
           <div className="relative w-full">
@@ -781,8 +803,8 @@ const ChemicalInventoryApp = () => {
             )}
           </div>
 
-          {/* Bottom Row: Dropdowns */}
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+          {/* Bottom Row: Dropdowns - Scrollable on mobile */}
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
 
             {/* Location Filter */}
             <div className="relative">
@@ -910,20 +932,20 @@ const ChemicalInventoryApp = () => {
             </div>
 
             {/* Desktop View: Table */}
-            <div className="hidden md:block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors">
+            <div className="hidden md:block bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 ring-1 ring-black/5">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs uppercase font-semibold tracking-wider sticky top-0 z-10">
+                  <thead className="bg-[#f1f5f9] dark:bg-slate-900 text-gray-600 dark:text-gray-400 text-[10px] uppercase font-black tracking-widest sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700">
                     <tr>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[10%]">ID</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[25%]">ชื่อสารเคมี / CAS</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[10%]">ปริมาณ</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[15%]">รับเข้า / หมดอายุ</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[10%]">ที่เก็บ</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">หมายเหตุ</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">GHS</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[5%]">สถานะ</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-right w-[5%]">จัดการ</th>
+                      <th className="p-5 w-[8%]">Asset ID</th>
+                      <th className="p-5 w-[25%]">Specification / Identification</th>
+                      <th className="p-5 w-[10%] text-center">Qty</th>
+                      <th className="p-5 w-[15%]">Timeline (In/Out)</th>
+                      <th className="p-5 w-[12%]">Station</th>
+                      <th className="p-5 w-[10%] text-center">Logistics</th>
+                      <th className="p-5 w-[10%] text-center">Compliance</th>
+                      <th className="p-5 w-[5%] text-center">Status</th>
+                      <th className="p-5 w-[5%] text-right">Operations</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm text-gray-700 dark:text-gray-300 divide-y divide-gray-100 dark:divide-gray-700">
@@ -991,35 +1013,51 @@ const ChemicalInventoryApp = () => {
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 transition-colors">
-            <FileSpreadsheet size={48} className="mb-3 opacity-50" />
-            <p className="text-gray-600 dark:text-gray-400">ไม่พบข้อมูลที่ค้นหา</p>
+          <div className="flex flex-col items-center justify-center py-24 px-6 text-gray-400 dark:text-gray-500 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-[32px] border-2 border-dashed border-gray-200 dark:border-gray-700 transition-all overflow-hidden group">
+            <div className="p-8 bg-gray-50 dark:bg-slate-900 rounded-full mb-6 group-hover:scale-110 transition-transform duration-500">
+              <Search size={64} className="text-gray-300 dark:text-gray-600" />
+            </div>
+            <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 mb-2">No Chemicals Found</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mb-8">
+              We couldn't find any results matching your current filters or search query. Try adjusting your search or clearing filters.
+            </p>
+            <button
+              onClick={handleResetFilters}
+              className="px-8 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-blue-200 dark:shadow-none hover:bg-blue-700 transition-all active:scale-95"
+            >
+              Reset All Filters
+            </button>
           </div>
         )}
 
         {/* Modal Form */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 z-50 animate-in fade-in duration-200">
-            <div className="bg-white w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 overflow-hidden">
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-500" onClick={() => setIsModalOpen(false)}></div>
+            <div className="relative bg-white dark:bg-slate-800 w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl shadow-2xl md:rounded-3xl flex flex-col animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 ease-out transition-all">
+
+              <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-700/50 flex justify-between items-center bg-white dark:bg-slate-800 md:rounded-t-3xl sticky top-0 z-10">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-2xl ${isEditing ? 'bg-amber-50 dark:bg-amber-900/30' : 'bg-blue-50 dark:bg-blue-900/30'}`}>
+                    {isEditing ? <Edit className="text-amber-600" size={24} /> : <Plus className="text-blue-600" size={24} />}
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
+                      {isEditing ? 'Edit Record' : 'Create Entry'}
+                    </h3>
+                    <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Chemical Information System v4.0</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-600 rounded-2xl p-2.5 transition-all active:scale-90"
+                >
+                  <X size={24} />
+                </button>
+              </div>
 
               <form onSubmit={handleSave} className="flex flex-col h-full min-h-0">
-                {/* Modal Header */}
-                <div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-100 shrink-0">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-800">
-                      {isEditing ? 'แก้ไขข้อมูลสารเคมี' : 'เพิ่มสารเคมีใหม่'}
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">กรอกข้อมูลให้ครบถ้วนเพื่อความถูกต้อง</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-colors"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-
                 {/* Modal Body - Scrollable */}
                 <div className="p-4 md:p-6 overflow-y-auto flex-1 min-h-0">
                   {/* Error in Modal */}
@@ -1236,29 +1274,29 @@ const ChemicalInventoryApp = () => {
                 </div>
 
                 {/* Modal Footer */}
-                <div className="p-4 md:p-6 border-t border-gray-100 bg-gray-50 md:rounded-b-2xl flex justify-end gap-3 shrink-0">
+                <div className="p-6 md:p-8 border-t border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-slate-900/50 md:rounded-b-3xl flex justify-end gap-4 shrink-0 backdrop-blur-sm">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
                     disabled={isSaving}
-                    className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 text-gray-600 dark:text-gray-300 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-black text-sm active:scale-95 disabled:opacity-50"
                   >
-                    ยกเลิก
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSaving || !formData.id || !formData.name}
-                    className="px-6 py-2.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200 flex items-center gap-2 transition-all active:scale-95 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+                    className={`px-8 py-3 text-white rounded-2xl shadow-xl transition-all active:scale-95 font-black text-sm flex items-center gap-3 disabled:opacity-50 ${isEditing ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-200/50' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200/50'}`}
                   >
                     {isSaving ? (
                       <>
-                        <Loader2 size={18} className="animate-spin" />
-                        กำลังบันทึก...
+                        <Loader2 size={20} className="animate-spin" />
+                        Processing...
                       </>
                     ) : (
                       <>
-                        <Save size={18} />
-                        บันทึกข้อมูล
+                        <Save size={20} />
+                        {isEditing ? 'Update Entry' : 'Save Entry'}
                       </>
                     )}
                   </button>
