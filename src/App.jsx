@@ -239,9 +239,16 @@ const ChemicalInventoryApp = () => {
     setError(null);
 
     try {
-      // Data Cleaning & Validation
-      const cleanId = formData.id.trim();
-      const cleanName = formData.name.trim();
+      // Comprehensive Data Hardening & Sanitization
+      const cleanId = formData.id?.trim() || "";
+      const cleanName = formData.name?.trim() || "";
+      const cleanCas = formData.cas?.trim() || "-";
+      const cleanLocation = formData.location?.trim() || "-";
+      const cleanHazard = formData.hazard?.trim() || "-";
+      const cleanNote = formData.expirationNote?.trim() || "-";
+      const cleanRemaining = formData.remaining?.trim() || "-";
+      const cleanImport = formData.importDate?.trim() || "-";
+      const cleanExpiry = formData.expiry?.trim() || "-";
 
       if (!cleanId || !cleanName) {
         throw new Error("โปรดระบุ Bottle ID และชื่อสารเคมี");
@@ -255,15 +262,22 @@ const ChemicalInventoryApp = () => {
         ...formData,
         id: cleanId,
         name: cleanName,
-        // Remove old string-based timestamp to rely on server synchronization
-        lastUpdated: null
+        cas: cleanCas,
+        location: cleanLocation,
+        hazard: cleanHazard,
+        expirationNote: cleanNote,
+        remaining: cleanRemaining,
+        importDate: cleanImport,
+        expiry: cleanExpiry,
+        // Ensure old fields are cleared if they exist
+        lastUpdated: null,
+        updatedAt: null // Will be set by server
       };
 
       // Enforce Auto-Expiry Logic on Save
       if (checkIsExpired(finalFormData.expiry)) {
         finalFormData.status = "Expired";
       } else if (finalFormData.status === "Expired") {
-        // If date is valid (not expired) but status is 'Expired', reset to 'Ready'
         finalFormData.status = "Ready";
       }
 
@@ -370,12 +384,16 @@ const ChemicalInventoryApp = () => {
   }, [processedData]);
 
   const filteredData = useMemo(() => {
+    const searchLower = searchTerm.trim().toLowerCase();
     return processedData
       .filter(item => {
         const matchesSearch =
-          (item.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (item.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (item.cas || "").includes(searchTerm);
+          (item.name || "").toLowerCase().includes(searchLower) ||
+          (item.id || "").toLowerCase().includes(searchLower) ||
+          (item.cas || "").includes(searchTerm) ||
+          (item.hazard || "").toLowerCase().includes(searchLower) ||
+          (item.expirationNote || "").toLowerCase().includes(searchLower);
+
         const matchesLocation = filterLocation === "All" || item.location === filterLocation;
         const matchesStatus = filterStatus === "All" || item.status === filterStatus;
         const matchesGHS = filterGHS === "All" || (item.ghs && item.ghs[filterGHS]);
@@ -387,14 +405,14 @@ const ChemicalInventoryApp = () => {
       .sort((a, b) => (a.id || "").localeCompare(b.id || "", undefined, { numeric: true, sensitivity: 'base' }));
   }, [processedData, searchTerm, filterLocation, filterStatus, filterGHS, filterExpNote, filterSignalWord]);
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: processedData.length,
     ready: processedData.filter(d => d.status === "Ready").length,
     dispose: processedData.filter(d => d.status === "Dispose").length,
     expired: processedData.filter(d => d.status === "Expired").length,
     flammable: processedData.filter(d => d.ghs?.flammable).length,
     danger: processedData.filter(d => d.signalWord === "Danger").length
-  };
+  }), [processedData]);
 
   const overallLastUpdated = useMemo(() => {
     if (data.length === 0) return "-";
@@ -657,7 +675,7 @@ const ChemicalInventoryApp = () => {
               {/* Add Button */}
               <button
                 onClick={handleAddNew}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 md:px-5 md:py-2.5 rounded-xl shadow-lg shadow-blue-600/20 active:scale-95 transition-all outline-none"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 md:px-5 md:py-2.5 rounded-2xl shadow-lg shadow-blue-600/20 active:scale-95 transition-all outline-none focus:ring-4 focus:ring-blue-500/20"
               >
                 <Plus size={20} />
                 <span className="hidden sm:inline font-bold text-sm">Add Chemical</span>
@@ -967,8 +985,8 @@ const ChemicalInventoryApp = () => {
                 <Search className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500" size={18} />
                 <input
                   type="text"
-                  placeholder="ค้นหา keyword ชื่อสาร, ID, และ CAS เท่านั้น"
-                  className="w-full pl-10 pr-10 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:bg-white dark:focus:bg-gray-600 transition-all text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="ค้นหาชื่อสาร, ID, CAS, Hazard หรือหมายเหตุ..."
+                  className="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-600 transition-all text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -1077,7 +1095,7 @@ const ChemicalInventoryApp = () => {
                           setIsLoading(false);
                         });
                     }}
-                    className="flex items-center justify-center p-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-xl hover:bg-blue-100 transition-all active:scale-90"
+                    className="flex items-center justify-center p-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-2xl hover:bg-blue-100 transition-all active:scale-90 focus:ring-4 focus:ring-blue-500/10"
                     title="รีเฟรชข้อมูล"
                   >
                     <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
@@ -1085,7 +1103,7 @@ const ChemicalInventoryApp = () => {
 
                   <button
                     onClick={handleResetFilters}
-                    className="flex items-center justify-center p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-90"
+                    className="flex items-center justify-center p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-90 focus:ring-4 focus:ring-red-500/10"
                     title="ล้างตัวกรองทั้งหมด"
                   >
                     <X size={18} />
