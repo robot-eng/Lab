@@ -2,65 +2,21 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search, Filter, AlertTriangle, Beaker, Flame, Skull, Droplet, Wind, CircleDot, Bug, AlertCircle,
   Plus, Trash2, Edit, X, ChevronDown, ChevronUp, Loader2, RefreshCw, FileText, Check, Save, FileSpreadsheet,
-  Bomb, Fish, Moon, Sun, Download, BarChart3, Clock
+  Bomb, Fish, Moon, Sun, Download, BarChart3, Clock, AlertCircle, AlertTriangle, Beaker, Flame, Skull, Wind, CircleDot
 } from 'lucide-react';
 import { firebaseService } from './services/firebaseService';
+import { GHS_CONFIG, STATUS_OPTIONS, EMPTY_FORM } from './constants';
 
-const EMPTY_FORM = {
-  id: "",
-  name: "",
-  cas: "",
-  hazard: "",
-  remaining: "",
-  location: "",
-  importDate: "",
-  expiry: "",
-  expirationNote: "",
-  status: "Ready",
-  lastUpdated: null,
-  ghs: { explosive: false, flammable: false, oxidizing: false, gas: false, corrosive: false, toxic: false, irritant: false, health: false, env: false }
-};
-
-// --- 1. Constants ---
-
-const GHS_CONFIG = [
-  { key: 'explosive', label: 'Explosive', icon: Bomb, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
-  { key: 'flammable', label: 'Flammable', icon: Flame, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
-  { key: 'oxidizing', label: 'Oxidizing', icon: CircleDot, color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200' },
-  { key: 'gas', label: 'Compressed Gas', icon: Wind, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-  { key: 'corrosive', label: 'Corrosive', icon: Beaker, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200' },
-  { key: 'toxic', label: 'Toxic', icon: Skull, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
-  { key: 'irritant', label: 'Irritant', icon: AlertCircle, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
-  { key: 'health', label: 'Health Hazard', icon: AlertTriangle, color: 'text-pink-600', bg: 'bg-pink-50', border: 'border-pink-200' },
-  { key: 'env', label: 'Environmental Hazard', icon: Fish, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
-];
-
-// --- 2. Utility Components ---
+// --- 1. Utility Components ---
 
 const StatusBadge = ({ status }) => {
-  let colorClass = "bg-gray-100 text-gray-800";
-  let label = status;
-
-  if (status === "Ready" || status === "TRUE") {
-    colorClass = "bg-green-100 text-green-800 border border-green-200";
-    label = "Ready";
-  } else if (status === "Not Ready") {
-    colorClass = "bg-red-100 text-red-800 border border-red-200";
-    label = "Not Ready";
-  } else if (status === "Dispose") {
-    colorClass = "bg-yellow-100 text-yellow-800 border border-yellow-200";
-    label = "Dispose";
-  } else if (status === "Donate") {
-    colorClass = "bg-blue-100 text-blue-800 border border-blue-200";
-    label = "Donate";
-  } else if (status === "Expired") {
-    colorClass = "bg-red-100 text-red-800 border border-red-200";
-    label = "Expired";
-  }
+  const config = STATUS_OPTIONS.find(opt => opt.value === status) ||
+    (status === "TRUE" ? STATUS_OPTIONS.find(opt => opt.value === "Ready") : null) ||
+    { label: status, color: "bg-gray-100 text-gray-800" };
 
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${colorClass}`}>
-      {label}
+    <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${config.color}`}>
+      {config.label}
     </span>
   );
 };
@@ -1135,11 +1091,9 @@ const ChemicalInventoryApp = () => {
                           onChange={handleFormChange}
                           className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white appearance-none font-normal"
                         >
-                          <option value="Ready">พร้อมใช้งาน</option>
-                          <option value="Not Ready">ไม่พร้อมใช้งาน</option>
-                          <option value="Expired">หมดอายุ</option>
-                          <option value="Dispose">ส่งกำจัด</option>
-                          <option value="Donate">บริจาค</option>
+                          {STATUS_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
                         </select>
                         <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
                       </div>
