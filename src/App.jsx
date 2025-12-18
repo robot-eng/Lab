@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search, Filter, AlertTriangle, Beaker, Flame, Skull, Droplet, Wind, CircleDot, Bug, AlertCircle,
   Plus, Trash2, Edit, X, ChevronDown, ChevronUp, Loader2, RefreshCw, FileText, Check, Save, FileSpreadsheet,
-  Bomb, Fish, Moon, Sun, Download, BarChart3
+  Bomb, Fish, Moon, Sun, Download, BarChart3, Clock
 } from 'lucide-react';
 import { firebaseService } from './services/firebaseService';
 
@@ -13,9 +13,11 @@ const EMPTY_FORM = {
   hazard: "",
   remaining: "",
   location: "",
+  importDate: "",
   expiry: "",
   expirationNote: "",
   status: "Ready",
+  lastUpdated: null,
   ghs: { explosive: false, flammable: false, oxidizing: false, gas: false, corrosive: false, toxic: false, irritant: false, health: false, env: false }
 };
 
@@ -51,6 +53,9 @@ const StatusBadge = ({ status }) => {
   } else if (status === "Donate") {
     colorClass = "bg-blue-100 text-blue-800 border border-blue-200";
     label = "Donate";
+  } else if (status === "Expired") {
+    colorClass = "bg-red-100 text-red-800 border border-red-200";
+    label = "Expired";
   }
 
   return (
@@ -113,12 +118,18 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
           <span className="font-medium">{item.remaining || "-"}</span>
         </div>
         <div>
-          <span className="text-xs text-gray-500 dark:text-gray-400 block">Expiry Date</span>
-          <span className="font-medium">{item.expiry || "-"}</span>
-        </div>
-        <div className="col-span-2">
           <span className="text-xs text-gray-500 dark:text-gray-400 block">Location</span>
           <span className="font-medium">{item.location}</span>
+        </div>
+        <div>
+          <span className="text-xs text-gray-500 dark:text-gray-400 block">Import Date</span>
+          <span className="font-medium">{item.importDate || "-"}</span>
+        </div>
+        <div>
+          <span className="text-xs text-gray-500 dark:text-gray-400 block">Expiry Date</span>
+          <span className={`font-medium ${item.status === 'Expired' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
+            {item.expiry || "-"}
+          </span>
         </div>
       </div>
 
@@ -159,6 +170,33 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
 };
 
 
+
+const checkIsExpired = (expiryDate) => {
+  if (!expiryDate || typeof expiryDate !== 'string') return false;
+
+  const cleanDate = expiryDate.trim();
+
+  // Check for Year only format (YYYY)
+  if (/^\d{4}$/.test(cleanDate)) {
+    const year = parseInt(cleanDate, 10);
+    const currentYear = new Date().getFullYear();
+    return year < currentYear;
+  }
+
+  // Try parsing DD/MM/YYYY
+  const parts = cleanDate.split('/');
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    const expDate = new Date(year, month, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return expDate < today;
+  }
+  return false;
+};
+
 // --- 3. Main Application ---
 
 const ChemicalInventoryApp = () => {
@@ -189,7 +227,12 @@ const ChemicalInventoryApp = () => {
   useEffect(() => {
     setIsLoading(true);
     const unsubscribe = firebaseService.subscribeToData((newData) => {
-      setData(newData || []);
+      // Safety: Ensure data is always an array (Firebase RD can return Objects with index keys)
+      const sanitizedData = Array.isArray(newData)
+        ? newData
+        : (newData ? Object.values(newData) : []);
+
+      setData(sanitizedData);
       setIsLoading(false);
     });
 
@@ -207,6 +250,17 @@ const ChemicalInventoryApp = () => {
     }
   }, [isDarkMode]);
 
+  // --- Processed Data (Auto-Expiry) ---
+  const processedData = useMemo(() => {
+    return data.map(item => {
+      // If status is 'Ready' AND it is expired -> Override to 'Expired'
+      if (item.status === 'Ready' && checkIsExpired(item.expiry)) {
+        return { ...item, status: 'Expired' };
+      }
+      return item;
+    });
+  }, [data]);
+
   // --- Handlers ---
 
   const handleSave = async (e) => {
@@ -215,14 +269,37 @@ const ChemicalInventoryApp = () => {
     setError(null);
 
     try {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+
+      const currentDateTime = `${day}/${month}/${year} at ${hours}:${minutes}`;
+
+      let finalFormData = {
+        ...formData,
+        lastUpdated: currentDateTime,
+        updatedAt: Date.now()
+      };
+
+      // Enforce Auto-Expiry Logic on Save
+      if (checkIsExpired(finalFormData.expiry)) {
+        finalFormData.status = "Expired";
+      } else if (finalFormData.status === "Expired") {
+        // If date is valid (not expired) but status is 'Expired', reset to 'Ready'
+        finalFormData.status = "Ready";
+      }
+
       let newData;
       if (isEditing) {
-        newData = data.map(item => item.id === formData.id ? formData : item);
+        newData = data.map(item => item.id === formData.id ? finalFormData : item);
       } else {
         if (data.some(item => item.id === formData.id)) {
           throw new Error(`ID ${formData.id} already exists. Please use a different ID.`);
         }
-        newData = [...data, formData];
+        newData = [...data, finalFormData];
       }
 
       // Save to Firebase
@@ -256,32 +333,32 @@ const ChemicalInventoryApp = () => {
 
   // --- Derived Data ---
   const locations = useMemo(() => {
-    const locs = new Set(data.map(d => d.location));
+    const locs = new Set(processedData.map(d => d.location));
     return ["All", ...Array.from(locs)];
-  }, [data]);
+  }, [processedData]);
 
   const formLocations = useMemo(() => {
-    const locs = new Set(data.map(d => d.location));
+    const locs = new Set(processedData.map(d => d.location));
     if (formData.location && !locs.has(formData.location)) locs.add(formData.location);
     return Array.from(locs).sort();
-  }, [data, formData.location]);
+  }, [processedData, formData.location]);
 
   const formExpirationNotes = useMemo(() => {
-    const notes = new Set(data.map(d => d.expirationNote).filter(n => n && n !== '-'));
+    const notes = new Set(processedData.map(d => d.expirationNote).filter(n => n && n !== '-'));
     return Array.from(notes).sort();
-  }, [data]);
+  }, [processedData]);
 
   const uniqueExpirationNotes = useMemo(() => {
-    const notes = new Set(data.map(d => d.expirationNote).filter(n => n && n !== '-'));
+    const notes = new Set(processedData.map(d => d.expirationNote).filter(n => n && n !== '-'));
     return ["All", ...Array.from(notes).sort()];
-  }, [data]);
+  }, [processedData]);
 
   const formHazards = useMemo(() => {
-    const hazards = new Set(data.map(d => d.hazard).filter(h => h && h !== '-'));
+    const hazards = new Set(processedData.map(d => d.hazard).filter(h => h && h !== '-'));
     return Array.from(hazards).sort();
-  }, [data]);
+  }, [processedData]);
 
-  const filteredData = data.filter(item => {
+  const filteredData = processedData.filter(item => {
     const matchesSearch =
       (item.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -295,11 +372,36 @@ const ChemicalInventoryApp = () => {
   });
 
   const stats = {
-    total: data.length,
-    ready: data.filter(d => d.status === "Ready").length,
-    dispose: data.filter(d => d.status === "Dispose").length,
-    flammable: data.filter(d => d.ghs?.flammable).length
+    total: processedData.length,
+    ready: processedData.filter(d => d.status === "Ready").length,
+    dispose: processedData.filter(d => d.status === "Dispose").length,
+    expired: processedData.filter(d => d.status === "Expired").length,
+    flammable: processedData.filter(d => d.ghs?.flammable).length
   };
+
+  const overallLastUpdated = useMemo(() => {
+    if (data.length === 0) return "-";
+
+    // Find item with latest updatedAt timestamp
+    const latest = data.reduce((max, item) => {
+      return (item.updatedAt || 0) > (max.updatedAt || 0)
+        ? item
+        : max;
+    }, { updatedAt: 0 });
+
+    if (latest.updatedAt) {
+      const date = new Date(latest.updatedAt);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${year} at ${hours}:${minutes}`;
+    }
+
+    // Fallback for old data without timestamp
+    return latest.lastUpdated || '-';
+  }, [data]);
 
   // --- CRUD Handlers ---
 
@@ -365,7 +467,9 @@ const ChemicalInventoryApp = () => {
       CAS: item.cas,
       Location: item.location,
       Remaining: item.remaining,
-      Expiry: item.expiry,
+      ImportDate: item.importDate || '-',
+      Expiry: item.expiry || '-',
+
       Status: item.status,
       GHS: Object.keys(item.ghs || {})
         .filter(k => item.ghs[k])
@@ -393,7 +497,7 @@ const ChemicalInventoryApp = () => {
       <table>
         <tr>
           <th>ID</th><th>Name</th><th>CAS</th><th>Location</th><th>Remaining</th>
-          <th>Expiry</th><th>Status</th><th>GHS</th><th>Hazard</th><th>Note</th>
+          <th>Import Date</th><th>Expiry</th><th>Status</th><th>GHS</th><th>Hazard</th><th>Note</th>
         </tr>
         ${filteredData.map(item => `
           <tr>
@@ -402,7 +506,8 @@ const ChemicalInventoryApp = () => {
             <td>${item.cas}</td>
             <td>${item.location}</td>
             <td>${item.remaining}</td>
-            <td>${item.expiry}</td>
+            <td>${item.importDate || '-'}</td>
+            <td>${item.expiry || '-'}</td>
             <td>${item.status}</td>
             <td>${Object.keys(item.ghs || {})
         .filter(k => item.ghs[k])
@@ -415,7 +520,7 @@ const ChemicalInventoryApp = () => {
       </table>
     `;
 
-    const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel' });
+    const blob = new Blob(['\ufeff', htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `chemical-inventory-${new Date().toISOString().split('T')[0]}.xls`;
@@ -544,7 +649,7 @@ const ChemicalInventoryApp = () => {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           <button
             onClick={() => handleStatClick('all', null)}
             className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
@@ -573,19 +678,35 @@ const ChemicalInventoryApp = () => {
             <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Flammable</div>
             <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{stats.flammable}</div>
           </button>
+          <button
+            onClick={() => handleStatClick('status', 'Expired')}
+            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
+          >
+            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Expired / หมดอายุ</div>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{stats.expired}</div>
+          </button>
         </div>
 
         {/* Stats Dashboard */}
         {showDashboard && data.length > 0 && (
           <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <BarChart3 size={20} className="text-blue-600 dark:text-blue-400" />
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Statistics Overview</h3>
+            <div className="flex items-start justify-between mb-4 gap-2">
+              <div className="flex items-start gap-2">
+                <BarChart3 size={20} className="text-blue-600 dark:text-blue-400 mt-1" />
+                <div className="flex flex-col">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Statistics Overview</h3>
+                  {overallLastUpdated && overallLastUpdated !== '-' && (
+                    <div className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                      <Clock size={10} className="text-gray-400" />
+                      <span className="font-medium italic">Data Updated: {overallLastUpdated}</span>
+                    </div>
+                  )}
+                </div>
               </div>
+
               <button
                 onClick={() => setShowDashboard(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1"
               >
                 <X size={18} />
               </button>
@@ -718,6 +839,7 @@ const ChemicalInventoryApp = () => {
                 <option value="All">ทุกสถานะ</option>
                 <option value="Ready">พร้อมใช้งาน</option>
                 <option value="Not Ready">ไม่พร้อมใช้งาน</option>
+                <option value="Expired">หมดอายุ</option>
                 <option value="Dispose">ส่งกำจัด</option>
                 <option value="Donate">บริจาค</option>
               </select>
@@ -768,8 +890,11 @@ const ChemicalInventoryApp = () => {
                 const minDelay = new Promise(resolve => setTimeout(resolve, 800));
 
                 Promise.all([firebaseService.fetchDataOnce(), minDelay])
-                  .then(([data]) => {
-                    setData(data || []);
+                  .then(([newData]) => {
+                    const sanitizedData = Array.isArray(newData)
+                      ? newData
+                      : (newData ? Object.values(newData) : []);
+                    setData(sanitizedData);
                     setIsLoading(false);
                   })
                   .catch(err => {
@@ -826,11 +951,12 @@ const ChemicalInventoryApp = () => {
                     <tr>
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[10%]">ID</th>
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[25%]">ชื่อสารเคมี / CAS</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[15%]">ปริมาณ</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[15%]">ที่เก็บ</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">หมายเหตุ/Note</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[10%]">ปริมาณ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[15%]">รับเข้า / หมดอายุ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 w-[10%]">ที่เก็บ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">หมายเหตุ</th>
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">GHS</th>
-                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[10%]">สถานะ</th>
+                      <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-center w-[5%]">สถานะ</th>
                       <th className="p-4 border-b border-gray-200 dark:border-gray-600 text-right w-[5%]">จัดการ</th>
                     </tr>
                   </thead>
@@ -845,7 +971,12 @@ const ChemicalInventoryApp = () => {
                         </td>
                         <td className="p-4 whitespace-nowrap">
                           <div className="text-gray-900 dark:text-gray-100 font-medium">{item.remaining}</div>
-                          <div className="text-xs text-gray-400 dark:text-gray-500">Exp: {item.expiry}</div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">In:  <span className="text-gray-700 dark:text-gray-200 font-medium">{item.importDate || '-'}</span></div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Exp: <span className={`font-medium ${item.status === 'Expired' ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-200'}`}>{item.expiry || '-'}</span></div>
+                          </div>
                         </td>
                         <td className="p-4 text-gray-700 dark:text-gray-300">{item.location}</td>
                         <td className="p-4 text-center">
@@ -889,7 +1020,7 @@ const ChemicalInventoryApp = () => {
                 </table>
               </div>
               <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex justify-between items-center bg-gray-50 dark:bg-gray-700/50">
-                <span>แสดง {filteredData.length} รายการ จากทั้งหมด {data.length}</span>
+                <span>แสดง {filteredData.length} รายการ จากทั้งหมด {processedData.length}</span>
               </div>
             </div>
           </>
@@ -925,6 +1056,14 @@ const ChemicalInventoryApp = () => {
 
                 {/* Modal Body - Scrollable */}
                 <div className="p-4 md:p-6 overflow-y-auto flex-1 min-h-0">
+                  {/* Error in Modal */}
+                  {error && (
+                    <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200 flex items-center gap-2 animate-pulse">
+                      <AlertTriangle size={16} />
+                      {error}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     {/* ID */}
@@ -975,11 +1114,15 @@ const ChemicalInventoryApp = () => {
                       <input
                         type="text"
                         name="location"
+                        list="location-list"
                         value={formData.location}
                         onChange={handleFormChange}
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                         placeholder="เช่น Storage 1, ห้องเก็บของ 2"
                       />
+                      <datalist id="location-list">
+                        {formLocations.map(loc => <option key={loc} value={loc} />)}
+                      </datalist>
                     </div>
 
                     {/* Status */}
@@ -994,6 +1137,7 @@ const ChemicalInventoryApp = () => {
                         >
                           <option value="Ready">พร้อมใช้งาน</option>
                           <option value="Not Ready">ไม่พร้อมใช้งาน</option>
+                          <option value="Expired">หมดอายุ</option>
                           <option value="Dispose">ส่งกำจัด</option>
                           <option value="Donate">บริจาค</option>
                         </select>
@@ -1014,13 +1158,24 @@ const ChemicalInventoryApp = () => {
                       />
                     </div>
                     <div className="md:col-span-1">
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">วันหมดอายุ</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">วันนำเข้า (Import Date)</label>
+                      <input
+                        type="text"
+                        name="importDate"
+                        value={formData.importDate}
+                        onChange={handleFormChange}
+                        placeholder="เช่น 18/12/2025"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
+                      />
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">วันหมดอายุ (Expiry Date)</label>
                       <input
                         type="text"
                         name="expiry"
                         value={formData.expiry}
                         onChange={handleFormChange}
-                        placeholder="เช่น พ.ค.-26 หรือ 9/11/2024"
+                        placeholder="เช่น พ.ค.-26 หรือ 9/11/2026"
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
                     </div>
@@ -1034,11 +1189,15 @@ const ChemicalInventoryApp = () => {
                       <input
                         type="text"
                         name="expirationNote"
+                        list="expirationNote-list"
                         value={formData.expirationNote}
                         onChange={handleFormChange}
                         placeholder="เช่น ส่งกำจัดที่ตึก B, รอการบริจาค, หมายเหตุ/Noteเพิ่มเติม"
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
+                      <datalist id="expirationNote-list">
+                        {formExpirationNotes.map(note => <option key={note} value={note} />)}
+                      </datalist>
                     </div>
 
                     {/* Hazard Text */}
@@ -1048,11 +1207,15 @@ const ChemicalInventoryApp = () => {
                       <input
                         type="text"
                         name="hazard"
+                        list="hazard-list"
                         value={formData.hazard}
                         onChange={handleFormChange}
                         placeholder="เช่น ระวังเข้าตา, ห้ามสูดดม, highlight ต่างๆที่อยากเพิ่ม"
                         className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
                       />
+                      <datalist id="hazard-list">
+                        {formHazards.map(h => <option key={h} value={h} />)}
+                      </datalist>
                     </div>
 
                     {/* GHS Checkboxes */}
