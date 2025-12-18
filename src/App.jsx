@@ -469,32 +469,54 @@ const ChemicalInventoryApp = () => {
 
   const exportToExcel = () => {
     const htmlTable = `
+      <style>
+        table { border-collapse: collapse; width: 100%; font-family: sans-serif; }
+        th { background-color: #2563eb; color: #ffffff; font-weight: bold; border: 1px solid #dee2e6; padding: 12px; text-align: left; }
+        td { border: 1px solid #dee2e6; padding: 10px; text-align: left; vertical-align: middle; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .header-main { font-size: 18px; font-weight: bold; margin-bottom: 20px; color: #1e293b; }
+      </style>
+      <div class="header-main">Chemical & Bio Lab Inventory Report - ${new Date().toLocaleDateString('th-TH')}</div>
       <table>
-        <tr>
-          <th>ID</th><th>Name</th><th>CAS</th><th>Qty</th><th>Location</th>
-          <th>In Date</th><th>Exp Date</th><th>Signal Word</th><th>Status</th><th>GHS</th><th>Hazard</th><th>Note</th>
-        </tr>
-        ${filteredData.map(item => `
+        <thead>
           <tr>
-            <td>${item.id}</td>
-            <td>${item.name}</td>
-            <td>${item.cas}</td>
-            <td>${item.remaining}</td>
-            <td>${item.location}</td>
-            <td>${item.importDate || '-'}</td>
-            <td>${item.expiry || '-'}</td>
-            <td>${item.signalWord || '-'}</td>
-            <td>${item.status}</td>
-            <td>${Object.keys(item.ghs || {})
+            <th>Bottle ID</th>
+            <th>Chemical Name</th>
+            <th>CAS No.</th>
+            <th>Remaining Quantity</th>
+            <th>Location</th>
+            <th>Date Imported</th>
+            <th>Date Expiry</th>
+            <th>Signal Word</th>
+            <th>Current Status</th>
+            <th>GHS pictograms</th>
+            <th>Hazard Details</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filteredData.map(item => `
+            <tr>
+              <td>${item.id}</td>
+              <td>${item.name}</td>
+              <td>${item.cas || '-'}</td>
+              <td>${item.remaining || '-'}</td>
+              <td>${item.location || '-'}</td>
+              <td>${item.importDate || '-'}</td>
+              <td>${item.expiry || '-'}</td>
+              <td>${item.signalWord || '-'}</td>
+              <td>${item.status}</td>
+              <td>${Object.keys(item.ghs || {})
         .filter(k => item.ghs[k])
         .map(k => GHS_CONFIG.find(g => g.key === k)?.label || k)
         .join(', ')}</td>
-            <td>${item.hazard}</td>
-            <td>${item.expirationNote}</td>
-          </tr>
-        `).join('')}
+              <td>${item.hazard || '-'}</td>
+              <td>${item.expirationNote || '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
       </table>
-      `;
+    `;
 
     const blob = new Blob(['\ufeff', htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const link = document.createElement('a');
