@@ -1168,21 +1168,28 @@ const ChemicalInventoryApp = () => {
                       </div>
                     </div>
 
-                    {/* GHS Signal Word */}
+                    {/* GHS Signal Word - Quick Selection Buttons */}
                     <div className="md:col-span-1">
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">GHS Signal Word (ความรุนแรง)</label>
-                      <div className="relative">
-                        <select
-                          name="signalWord"
-                          value={formData.signalWord}
-                          onChange={handleFormChange}
-                          className={`w-full p-2.5 border rounded-lg focus:ring-2 outline-none appearance-none font-bold ${SIGNAL_WORD_OPTIONS.find(o => o.value === formData.signalWord)?.color.includes('red') ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white'}`}
-                        >
-                          {SIGNAL_WORD_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value} className="text-gray-900">{opt.label}</option>
-                          ))}
-                        </select>
-                        <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
+                      <label className="block text-xs font-black text-gray-700 dark:text-gray-400 mb-2 uppercase tracking-wider">
+                        Signal Word (ระดับความรุนแรง)
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {SIGNAL_WORD_OPTIONS.map(opt => {
+                          const isActive = formData.signalWord === opt.value;
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, signalWord: opt.value }))}
+                              className={`py-3 px-1 rounded-2xl text-[10px] font-black uppercase tracking-tighter transition-all border-2 flex items-center justify-center text-center shadow-sm active:scale-90 ${isActive
+                                  ? `${opt.color} border-current scale-105 shadow-md`
+                                  : 'bg-gray-50 dark:bg-slate-700/50 text-gray-400 border-transparent dark:border-gray-600/50 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-600'
+                                }`}
+                            >
+                              {opt.label.split(' (')[0]}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
