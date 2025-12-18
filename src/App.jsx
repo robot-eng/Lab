@@ -79,8 +79,8 @@ const ChemicalCard = ({ item, onEdit, onDelete, onToggleDanger }) => {
           <button
             onClick={() => onToggleDanger(item)}
             className={`p-2.5 rounded-xl transition-all shadow-sm border-2 ${item.signalWord === 'Danger'
-                ? 'bg-red-600 text-white border-red-700 animate-pulse'
-                : 'bg-white dark:bg-slate-700 text-gray-400 border-gray-100 dark:border-gray-600 hover:text-red-500 hover:border-red-200'
+              ? 'bg-red-600 text-white border-red-700 animate-pulse'
+              : 'bg-white dark:bg-slate-700 text-gray-400 border-gray-100 dark:border-gray-600 hover:text-red-500 hover:border-red-200'
               }`}
             title={item.signalWord === 'Danger' ? "Remove Danger Status" : "Mark as Danger"}
           >
@@ -684,14 +684,14 @@ const ChemicalInventoryApp = () => {
 
           <button
             onClick={() => handleStatClick('signalWord', 'Danger')}
-            className="group relative bg-red-600 p-5 rounded-2xl shadow-lg border border-red-700 flex flex-col justify-between transition-all hover:scale-[1.02] active:scale-95 text-left overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-bl-[40px] flex items-center justify-center transition-colors group-hover:bg-white/20">
-              <AlertTriangle size={20} className="text-white" />
+            className="group relative bg-red-600 p-5 rounded-2xl shadow-lg border border-red-700 flex flex-col justify-between transition-all hover:scale-[1.02] active:scale-95 text-left overflow-hidden ring-offset-2 hover:ring-2 hover:ring-red-500">
+            <div className="absolute -top-2 -right-2 w-20 h-20 bg-white/10 rounded-full flex items-center justify-center transition-all group-hover:bg-white/20 group-hover:scale-110">
+              <AlertTriangle size={24} className="text-white opacity-40" />
             </div>
-            <div className="text-red-100 text-[10px] font-black uppercase tracking-widest mb-1">Safety: Danger</div>
-            <div className="text-3xl font-black text-white">{stats.danger}</div>
-            <div className="mt-2 text-[10px] text-red-100 font-bold flex items-center gap-1 italic">
-              Click to Audit <ArrowRight size={10} />
+            <div className="text-red-100 text-[10px] font-black uppercase tracking-widest mb-1 relative z-10">Safety: Danger</div>
+            <div className="text-3xl font-black text-white relative z-10">{stats.danger}</div>
+            <div className="mt-2 text-[10px] text-red-100 font-bold flex items-center gap-1 italic relative z-10">
+              Check High Risk Items <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </button>
 
@@ -907,40 +907,37 @@ const ChemicalInventoryApp = () => {
               <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
             </div>
 
-            {/* Refresh Button */}
-            <button
-              onClick={() => {
-                setIsLoading(true);
-                // Add minimum delay to show spinner
-                const minDelay = new Promise(resolve => setTimeout(resolve, 800));
+            {/* Refresh & Reset Group */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setIsLoading(true);
+                  const minDelay = new Promise(resolve => setTimeout(resolve, 800));
+                  Promise.all([firebaseService.fetchDataOnce(), minDelay])
+                    .then(([newData]) => {
+                      setData(newData);
+                      setIsLoading(false);
+                    })
+                    .catch(err => {
+                      console.error("Error refreshing data:", err);
+                      setError("รีเฟรชไม่สำเร็จ");
+                      setIsLoading(false);
+                    });
+                }}
+                className="flex items-center justify-center p-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 rounded-xl hover:bg-blue-100 transition-all active:scale-90"
+                title="รีเฟรชข้อมูล"
+              >
+                <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+              </button>
 
-                Promise.all([firebaseService.fetchDataOnce(), minDelay])
-                  .then(([newData]) => {
-                    setData(newData);
-                    setIsLoading(false);
-                  })
-                  .catch(err => {
-                    console.error("Error refreshing data:", err);
-                    setError("ไม่สามารถรีเฟรชข้อมูลได้ (Timeout)");
-                    setIsLoading(false);
-                  });
-              }}
-              className="flex items-center justify-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 col-span-1"
-              title="รีเฟรชข้อมูล"
-            >
-              <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-              <span className="md:hidden text-xs font-medium">รีเฟรช</span>
-            </button>
-
-            {/* Reset Filters Button */}
-            <button
-              onClick={handleResetFilters}
-              className="flex items-center justify-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 col-span-1"
-              title="ล้างตัวกรอง"
-            >
-              <X size={16} />
-              <span className="md:hidden text-xs font-medium">ล้างตัวกรอง</span>
-            </button>
+              <button
+                onClick={handleResetFilters}
+                className="flex items-center justify-center p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-90"
+                title="ล้างตัวกรองทั้งหมด"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
           </div>
         </div>
@@ -1024,8 +1021,8 @@ const ChemicalInventoryApp = () => {
                             <button
                               onClick={() => toggleDanger(item)}
                               className={`p-1.5 rounded-lg transition-all border ${item.signalWord === 'Danger'
-                                  ? 'text-white bg-red-600 border-red-700 shadow-sm'
-                                  : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 border-transparent'
+                                ? 'text-white bg-red-600 border-red-700 shadow-sm'
+                                : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 border-transparent'
                                 }`}
                               title={item.signalWord === 'Danger' ? "Remove Danger Status" : "Mark as Danger"}
                             >
