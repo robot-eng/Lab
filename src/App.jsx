@@ -369,19 +369,23 @@ const ChemicalInventoryApp = () => {
     return Array.from(hazards).sort();
   }, [processedData]);
 
-  const filteredData = processedData.filter(item => {
-    const matchesSearch =
-      (item.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.cas || "").includes(searchTerm);
-    const matchesLocation = filterLocation === "All" || item.location === filterLocation;
-    const matchesStatus = filterStatus === "All" || item.status === filterStatus;
-    const matchesGHS = filterGHS === "All" || (item.ghs && item.ghs[filterGHS]);
-    const matchesExpNote = filterExpNote === "All" || item.expirationNote === filterExpNote;
-    const matchesSignalWord = filterSignalWord === "All" || item.signalWord === filterSignalWord;
+  const filteredData = useMemo(() => {
+    return processedData
+      .filter(item => {
+        const matchesSearch =
+          (item.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (item.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (item.cas || "").includes(searchTerm);
+        const matchesLocation = filterLocation === "All" || item.location === filterLocation;
+        const matchesStatus = filterStatus === "All" || item.status === filterStatus;
+        const matchesGHS = filterGHS === "All" || (item.ghs && item.ghs[filterGHS]);
+        const matchesExpNote = filterExpNote === "All" || item.expirationNote === filterExpNote;
+        const matchesSignalWord = filterSignalWord === "All" || item.signalWord === filterSignalWord;
 
-    return matchesSearch && matchesLocation && matchesStatus && matchesGHS && matchesExpNote && matchesSignalWord;
-  });
+        return matchesSearch && matchesLocation && matchesStatus && matchesGHS && matchesExpNote && matchesSignalWord;
+      })
+      .sort((a, b) => (a.id || "").localeCompare(b.id || "", undefined, { numeric: true, sensitivity: 'base' }));
+  }, [processedData, searchTerm, filterLocation, filterStatus, filterGHS, filterExpNote, filterSignalWord]);
 
   const stats = {
     total: processedData.length,
