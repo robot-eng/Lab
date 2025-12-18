@@ -251,8 +251,11 @@ const ChemicalInventoryApp = () => {
       const cleanImport = formData.importDate?.trim() || "-";
       const cleanExpiry = formData.expiry?.trim() || "-";
 
-      if (!cleanId || !cleanName) {
-        throw new Error("โปรดระบุ Bottle ID และชื่อสารเคมี");
+      if (!cleanId) {
+        throw new Error("⚠️ โปรดระบุ Bottle ID (รหัสขวด)");
+      }
+      if (cleanName.length < 2) {
+        throw new Error("⚠️ ชื่อสารเคมีสั้นเกินไป โปรดระบุชื่อที่ชัดเจน");
       }
 
       if (/[.#$[\]]/.test(cleanId)) {
@@ -276,9 +279,18 @@ const ChemicalInventoryApp = () => {
       };
 
       // Enforce Auto-Expiry Logic on Save
+      const parseResult = parseFlexibleDate(finalFormData.expiry);
+      if (finalFormData.expiry !== '-' && !parseResult) {
+        // We allow saving but we should probably warn or handle it.
+        // For now, if they enter a garbage date, we don't mark as Expired.
+        // But we handle common formats in utils.
+      }
+
       if (checkIsExpired(finalFormData.expiry)) {
         finalFormData.status = "Expired";
       } else if (finalFormData.status === "Expired") {
+        // If it was manually set to Expired but date is NOT expired yet, 
+        // we default it back to Ready unless it's Dispose.
         finalFormData.status = "Ready";
       }
 
@@ -393,10 +405,12 @@ const ChemicalInventoryApp = () => {
         // Keyword Search Logic
         let matchesSearch = true;
         if (isSearching) {
+          const searchClean = searchLower.replace(/[-]/g, "");
           matchesSearch =
             (item.name || "").toLowerCase().includes(searchLower) ||
             (item.id || "").toLowerCase().includes(searchLower) ||
             (item.cas || "").toLowerCase().includes(searchLower) ||
+            (item.cas || "").replace(/[-]/g, "").includes(searchClean) ||
             (item.hazard || "").toLowerCase().includes(searchLower) ||
             (item.expirationNote || "").toLowerCase().includes(searchLower);
         }
