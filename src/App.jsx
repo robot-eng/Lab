@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { firebaseService } from './services/firebaseService';
 import { GHS_CONFIG, STATUS_OPTIONS, EMPTY_FORM, SIGNAL_WORD_OPTIONS } from './constants';
-import { checkIsExpired, formatDateTime, isValidCAS } from './utils';
+import { checkIsExpired, formatDateTime } from './utils';
 
 // --- 1. Utility Components ---
 
@@ -70,9 +70,8 @@ const ChemicalCard = ({ item, onEdit, onDelete, onToggleDanger }) => {
             <SignalWordBadge word={item.signalWord} />
           </div>
           <h3 className="font-black text-gray-900 dark:text-gray-100 text-xl leading-tight mb-1 antialiased tracking-tight">{item.name}</h3>
-          <div className={`text-xs font-mono flex items-center gap-1.5 ${item.cas && !isValidCAS(item.cas) ? 'text-red-600 font-bold' : 'text-gray-500 dark:text-gray-400'}`}>
+          <div className="text-xs font-mono flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
             <span className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-400">CAS</span> {item.cas || "N/A"}
-            {item.cas && !isValidCAS(item.cas) && <AlertCircle size={12} className="animate-pulse" />}
           </div>
         </div>
         <div className="flex flex-col gap-2 shrink-0 ml-2">
@@ -1292,18 +1291,13 @@ const ChemicalInventoryApp = () => {
                     <div className="md:col-span-1">
                       <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center justify-between">
                         CAS No.
-                        {formData.cas && !isValidCAS(formData.cas) && (
-                          <span className="text-[10px] text-red-500 flex items-center gap-1 font-bold animate-bounce">
-                            <AlertCircle size={10} /> รูปแบบไม่ถูกต้อง
-                          </span>
-                        )}
                       </label>
                       <input
                         type="text"
                         name="cas"
                         value={formData.cas}
                         onChange={handleFormChange}
-                        className={`w-full p-2.5 border rounded-lg focus:ring-2 outline-none transition-all font-normal ${formData.cas && !isValidCAS(formData.cas) ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:ring-blue-500/20 focus:border-blue-500'}`}
+                        className="w-full p-2.5 border rounded-lg focus:ring-2 outline-none transition-all font-normal border-gray-300 focus:ring-blue-500/20 focus:border-blue-500"
                         placeholder="เช่น 7783-20-2"
                       />
                     </div>
