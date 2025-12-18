@@ -5,8 +5,8 @@ import {
   Bomb, Fish, Moon, Sun, Download, BarChart3, Clock, AlertCircle, AlertTriangle, Beaker, Flame, Skull, Wind, CircleDot
 } from 'lucide-react';
 import { firebaseService } from './services/firebaseService';
-import { GHS_CONFIG, STATUS_OPTIONS, EMPTY_FORM } from './constants';
-import { checkIsExpired, formatDateTime } from './utils';
+import { GHS_CONFIG, STATUS_OPTIONS, EMPTY_FORM, SIGNAL_WORD_OPTIONS } from './constants';
+import { checkIsExpired, formatDateTime, isValidCAS } from './utils';
 
 // --- 1. Utility Components ---
 
@@ -16,7 +16,19 @@ const StatusBadge = ({ status }) => {
     { label: status, color: "bg-gray-100 text-gray-800" };
 
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${config.color}`}>
+    <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap ${config.color}`}>
+      {config.label}
+    </span>
+  );
+};
+
+const SignalWordBadge = ({ word }) => {
+  if (!word || word === "-") return null;
+  const config = SIGNAL_WORD_OPTIONS.find(opt => opt.value === word) ||
+    { label: word, color: "bg-gray-100 text-gray-800" };
+
+  return (
+    <span className={`px-2 py-1 rounded text-[10px] sm:text-xs font-black uppercase tracking-widest ${config.color}`}>
       {config.label}
     </span>
   );
@@ -45,15 +57,19 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
   return (
     <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-3 flex flex-col gap-3 transition-colors">
       <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-mono text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800">{item.id}</span>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span className="font-mono text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800 whitespace-nowrap">{item.id}</span>
             <StatusBadge status={item.status} />
+            <SignalWordBadge word={item.signalWord} />
           </div>
-          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg leading-tight">{item.name}</h3>
-          <div className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">CAS: {item.cas}</div>
+          <h3 className="font-extrabold text-gray-900 dark:text-gray-100 text-lg leading-tight mb-1">{item.name}</h3>
+          <div className={`text-xs font-mono flex items-center gap-1 ${item.cas && !isValidCAS(item.cas) ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>
+            <FileText size={10} /> CAS: {item.cas || "N/A"}
+            {item.cas && !isValidCAS(item.cas) && <AlertCircle size={10} title="Invalid CAS Format" />}
+          </div>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 shrink-0 ml-2">
           <button
             onClick={() => onEdit(item)}
             className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-colors"
@@ -303,7 +319,8 @@ const ChemicalInventoryApp = () => {
     ready: processedData.filter(d => d.status === "Ready").length,
     dispose: processedData.filter(d => d.status === "Dispose").length,
     expired: processedData.filter(d => d.status === "Expired").length,
-    flammable: processedData.filter(d => d.ghs?.flammable).length
+    flammable: processedData.filter(d => d.ghs?.flammable).length,
+    danger: processedData.filter(d => d.signalWord === "Danger").length
   };
 
   const overallLastUpdated = useMemo(() => {
@@ -439,7 +456,7 @@ const ChemicalInventoryApp = () => {
           </tr>
         `).join('')}
       </table>
-    `;
+      `;
 
     const blob = new Blob(['\ufeff', htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const link = document.createElement('a');
@@ -561,6 +578,30 @@ const ChemicalInventoryApp = () => {
 
       <div className="max-w-7xl mx-auto p-4 md:p-8">
 
+        {/* Safety Awareness Banner */}
+        {stats.danger > 0 && (
+          <div className="mb-6 p-4 bg-red-600 border border-red-700 rounded-xl text-white flex items-center justify-between shadow-lg shadow-red-200 dark:shadow-none animate-pulse">
+            <div className="flex items-center gap-3">
+              <AlertTriangle size={24} className="shrink-0" />
+              <div>
+                <h4 className="font-black text-lg leading-tight">DANGER ALERT: {stats.danger} ITEMS</h4>
+                <p className="text-sm text-red-100 opacity-90">พบสารเคมีอันตรายระดับสูง โปรดปฏิบัติตามระเบียบความปลอดภัยอย่างเคร่งครัด</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setFilterStatus("All");
+                setFilterGHS("All");
+                setSearchTerm("");
+                // We don't have a signal word filter yet, but we'll show all and highlight
+              }}
+              className="px-4 py-2 bg-white text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition-colors hidden sm:block"
+            >
+              See All
+            </button>
+          </div>
+        )}
+
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 flex items-center gap-2 text-sm">
@@ -570,40 +611,47 @@ const ChemicalInventoryApp = () => {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
           <button
             onClick={() => handleStatClick('all', null)}
             className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
           >
-            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Total Chemicals</div>
+            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">Total Inventory</div>
             <div className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{stats.total}</div>
           </button>
           <button
             onClick={() => handleStatClick('status', 'Ready')}
             className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
           >
-            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Ready</div>
+            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">Available</div>
             <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{stats.ready}</div>
           </button>
           <button
             onClick={() => handleStatClick('status', 'Dispose')}
             className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
           >
-            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Dispose</div>
+            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">To Dispose</div>
             <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">{stats.dispose}</div>
           </button>
           <button
             onClick={() => handleStatClick('ghs', 'flammable')}
             className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
           >
-            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Flammable</div>
+            <div className="text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+              <Flame size={12} /> Flammable
+            </div>
             <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{stats.flammable}</div>
           </button>
+
+          <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-xl shadow-sm border border-red-100 dark:border-red-900/30 flex flex-col justify-between transition-all">
+            <div className="text-red-700 dark:text-red-400 text-[10px] font-black uppercase tracking-widest">Safety: Danger</div>
+            <div className="text-2xl font-extrabold text-red-700 dark:text-red-400 mt-1">{stats.danger}</div>
+          </div>
           <button
             onClick={() => handleStatClick('status', 'Expired')}
             className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-all text-left active:scale-95"
           >
-            <div className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">Expired / หมดอายุ</div>
+            <div className="text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest">Expired</div>
             <div className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{stats.expired}</div>
           </button>
         </div>
@@ -1001,13 +1049,20 @@ const ChemicalInventoryApp = () => {
 
                     {/* CAS No */}
                     <div className="md:col-span-1">
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">CAS No.</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center justify-between">
+                        CAS No.
+                        {formData.cas && !isValidCAS(formData.cas) && (
+                          <span className="text-[10px] text-red-500 flex items-center gap-1 font-bold animate-bounce">
+                            <AlertCircle size={10} /> รูปแบบไม่ถูกต้อง
+                          </span>
+                        )}
+                      </label>
                       <input
                         type="text"
                         name="cas"
                         value={formData.cas}
                         onChange={handleFormChange}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-normal"
+                        className={`w-full p-2.5 border rounded-lg focus:ring-2 outline-none transition-all font-normal ${formData.cas && !isValidCAS(formData.cas) ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:ring-blue-500/20 focus:border-blue-500'}`}
                         placeholder="เช่น 7783-20-2"
                       />
                     </div>
@@ -1055,6 +1110,24 @@ const ChemicalInventoryApp = () => {
                         >
                           {STATUS_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {/* GHS Signal Word */}
+                    <div className="md:col-span-1">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">GHS Signal Word (ความรุนแรง)</label>
+                      <div className="relative">
+                        <select
+                          name="signalWord"
+                          value={formData.signalWord}
+                          onChange={handleFormChange}
+                          className={`w-full p-2.5 border rounded-lg focus:ring-2 outline-none appearance-none font-bold ${SIGNAL_WORD_OPTIONS.find(o => o.value === formData.signalWord)?.color.includes('red') ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white'}`}
+                        >
+                          {SIGNAL_WORD_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value} className="text-gray-900">{opt.label}</option>
                           ))}
                         </select>
                         <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />

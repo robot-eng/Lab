@@ -20,6 +20,12 @@ export const STATUS_OPTIONS = [
     { value: 'Donate', label: 'บริจาค', color: 'bg-blue-100 text-blue-800 border-blue-200' },
 ];
 
+export const SIGNAL_WORD_OPTIONS = [
+    { value: '-', label: 'ไม่มี (None)', color: 'bg-gray-100 text-gray-600' },
+    { value: 'Warning', label: 'ระวัง (Warning)', color: 'bg-orange-100 text-orange-700 font-bold border-orange-200' },
+    { value: 'Danger', label: 'อันตราย (Danger)', color: 'bg-red-600 text-white font-bold animate-pulse' },
+];
+
 export const EMPTY_FORM = {
     id: "",
     name: "",
@@ -31,6 +37,7 @@ export const EMPTY_FORM = {
     expiry: "",
     expirationNote: "",
     status: "Ready",
+    signalWord: "-",
     lastUpdated: null,
     ghs: { explosive: false, flammable: false, oxidizing: false, gas: false, corrosive: false, toxic: false, irritant: false, health: false, env: false }
 };

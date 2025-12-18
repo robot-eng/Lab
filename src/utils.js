@@ -29,6 +29,14 @@ export const checkIsExpired = (expiryDate) => {
 };
 
 /**
+ * Validates a CAS Registry Number format (XXXXXXX-XX-X).
+ */
+export const isValidCAS = (cas) => {
+    if (!cas || cas === "-") return true; // Optional field
+    return /^\d{2,7}-\d{2}-\d$/.test(cas.trim());
+};
+
+/**
  * Formats a timestamp into DD/MM/YYYY at HH:mm format.
  */
 export const formatDateTime = (timestamp) => {
