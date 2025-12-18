@@ -220,10 +220,11 @@ const ChemicalInventoryApp = () => {
     }
   }, [isDarkMode]);
 
-  // --- Processed Data (Auto-Expiry) ---
+  // --- Processed Data (Main Data Enrichment) ---
   const processedData = useMemo(() => {
     return data.map(item => {
-      // If status is 'Ready' AND it is expired -> Override to 'Expired'
+      // Logic: Only automatically mark as 'Expired' IF the status is 'Ready'
+      // This respects manual changes to 'Dispose' or other custom statuses.
       if (item.status === 'Ready' && checkIsExpired(item.expiry)) {
         return { ...item, status: 'Expired' };
       }
@@ -385,15 +386,22 @@ const ChemicalInventoryApp = () => {
 
   const filteredData = useMemo(() => {
     const searchLower = searchTerm.trim().toLowerCase();
+    const isSearching = searchLower !== "";
+
     return processedData
       .filter(item => {
-        const matchesSearch =
-          (item.name || "").toLowerCase().includes(searchLower) ||
-          (item.id || "").toLowerCase().includes(searchLower) ||
-          (item.cas || "").includes(searchTerm) ||
-          (item.hazard || "").toLowerCase().includes(searchLower) ||
-          (item.expirationNote || "").toLowerCase().includes(searchLower);
+        // Keyword Search Logic
+        let matchesSearch = true;
+        if (isSearching) {
+          matchesSearch =
+            (item.name || "").toLowerCase().includes(searchLower) ||
+            (item.id || "").toLowerCase().includes(searchLower) ||
+            (item.cas || "").toLowerCase().includes(searchLower) ||
+            (item.hazard || "").toLowerCase().includes(searchLower) ||
+            (item.expirationNote || "").toLowerCase().includes(searchLower);
+        }
 
+        // Categorical Filters
         const matchesLocation = filterLocation === "All" || item.location === filterLocation;
         const matchesStatus = filterStatus === "All" || item.status === filterStatus;
         const matchesGHS = filterGHS === "All" || (item.ghs && item.ghs[filterGHS]);
