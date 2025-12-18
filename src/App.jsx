@@ -530,113 +530,106 @@ const ChemicalInventoryApp = () => {
       {/* Top Navigation Bar */}
       <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-40 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <div className="bg-blue-600 dark:bg-blue-500 p-1.5 rounded-lg transition-colors">
-                <Beaker className="text-white" size={20} />
+          {/* Main Navigation Row */}
+          <div className="flex justify-between items-center h-16 md:h-20">
+            {/* Logo & Title Section */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="bg-blue-600 dark:bg-blue-500 p-2 md:p-2.5 rounded-xl shadow-lg shadow-blue-200/20 dark:shadow-none transition-transform active:scale-95 cursor-pointer">
+                <Beaker className="text-white" size={24} />
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-none">chemical & Bio ☣️</h1>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400">Lab Inventory System</p>
+              <div className="flex flex-col">
+                <h1 className="text-base md:text-xl font-black text-gray-900 dark:text-gray-100 leading-none tracking-tight truncate max-w-[140px] xs:max-w-[180px] md:max-w-none">
+                  Chemical & Bio <span className="hidden xs:inline">☣️</span>
+                </h1>
+                <p className="text-[10px] md:text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-0.5">Lab Inventory System</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Status & Sync Indicator */}
-              <div className="flex flex-col items-end">
+            {/* Actions Group */}
+            <div className="flex items-center gap-1.5 md:gap-3">
+              {/* Desktop Status (Hidden on Mobile) */}
+              <div className="hidden lg:flex flex-col items-end mr-2">
                 {isSaving ? (
-                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-800/50 animate-pulse">
+                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-800/30">
                     <Loader2 size={12} className="animate-spin" /> Saving...
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded-full border border-green-100 dark:border-green-800/50">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online
+                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-green-600 dark:text-green-400 bg-green-50/50 dark:bg-green-900/20 px-3 py-1 rounded-full border border-green-100 dark:border-green-800/30">
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Online
                   </div>
                 )}
-                <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
-                  <RefreshCw size={10} className={isLoading ? "animate-spin" : ""} />
-                  Updated: {overallLastUpdated}
+                <div className="text-[9px] font-bold text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
+                  <Clock size={10} /> Updated: {overallLastUpdated}
                 </div>
               </div>
 
-              {/* Dark Mode Toggle */}
+              {/* Theme Toggle */}
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                title={isDarkMode ? "Light Mode" : "Dark Mode"}
+                className="p-2 md:p-2.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all active:scale-90"
               >
                 {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
-              {/* Export Dropdown - Desktop */}
+              {/* Export - Desktop */}
               <div className="hidden md:block relative group">
-                <button
-                  className="flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  title="Export ข้อมูล"
-                >
+                <button className="flex items-center gap-2 p-2.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all">
                   <Download size={18} />
                 </button>
-                <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                  <button
-                    onClick={exportToCSV}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg transition-colors"
-                  >
-                    📄 Export CSV
+                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-1.5">
+                  <button onClick={exportToCSV} className="w-full px-4 py-2.5 text-left text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-colors">
+                    📄 Export as CSV
                   </button>
-                  <button
-                    onClick={exportToExcel}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg transition-colors"
-                  >
-                    📊 Export Excel
+                  <button onClick={exportToExcel} className="w-full px-4 py-2.5 text-left text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-900/30 hover:text-green-600 dark:hover:text-green-400 rounded-xl transition-colors">
+                    📊 Export as Excel
                   </button>
                 </div>
               </div>
 
-              {/* Export Dropdown - Mobile */}
+              {/* Export - Mobile */}
               <div className="md:hidden relative">
                 <button
                   onClick={(e) => {
                     const menu = e.currentTarget.nextElementSibling;
                     menu.classList.toggle('hidden');
                   }}
-                  className="flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  title="Export ข้อมูล"
+                  className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all"
                 >
                   <Download size={18} />
                 </button>
-                <div className="hidden absolute right-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
-                  <button
-                    onClick={exportToCSV}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg transition-colors"
-                  >
-                    📄 Export CSV
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (window.confirm('การดาวน์โหลด Excel บนมือถืออาจมีข้อจำกัด\n\nหากดาวน์โหลดไม่สำเร็จ แนะนำให้ใช้คอมพิวเตอร์ หรือเลือก Export CSV แทน\n\nต้องการดาวน์โหลด Excel ต่อหรือไม่?')) {
-                        exportToExcel();
-                      }
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg transition-colors"
-                  >
-                    📊 Export Excel
-                  </button>
+                <div className="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl z-50 p-1.5 animate-in slide-in-from-top-2 duration-200">
+                  <button onClick={exportToCSV} className="w-full px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl">📄 Export CSV</button>
+                  <button onClick={() => {
+                    if (window.confirm('ดาวน์โหลด Excel ต่อหรือไม่?')) exportToExcel();
+                  }} className="w-full px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-xl mt-1">📊 Export Excel</button>
                 </div>
               </div>
 
+              {/* Add Button */}
               <button
                 onClick={handleAddNew}
-                className="md:hidden flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 active:scale-95 transition-all"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-2 md:px-5 md:py-2.5 rounded-xl shadow-lg shadow-blue-600/20 active:scale-95 transition-all outline-none"
               >
                 <Plus size={20} />
+                <span className="hidden sm:inline font-bold text-sm">Add Chemical</span>
               </button>
-              <button
-                onClick={handleAddNew}
-                className="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm transition-all active:scale-95"
-              >
-                <Plus size={18} />
-                Add New Chemical
-              </button>
+            </div>
+          </div>
+
+          {/* Mobile Status Row (Dynamic) */}
+          <div className="lg:hidden flex items-center justify-center gap-4 py-2 border-t border-gray-100 dark:border-gray-800/50">
+            {isSaving ? (
+              <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                <Loader2 size={10} className="animate-spin" /> Saving...
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-green-600 dark:text-green-400">
+                <span className="w-1 h-1 bg-green-500 rounded-full"></span> Online
+              </div>
+            )}
+            <div className="h-3 w-px bg-gray-200 dark:bg-gray-700"></div>
+            <div className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-1">
+              <Clock size={10} /> Sync: {overallLastUpdated}
             </div>
           </div>
         </div>
