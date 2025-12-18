@@ -77,6 +77,74 @@ export const firebaseService = {
     },
 
     /**
+     * Push a new activity log entry
+     */
+    async pushLog(action, itemId, itemName, details = '') {
+        try {
+            const logsRef = ref(database, 'history');
+            const newLogRef = ref(database, `history/${Date.now()}_${Math.random().toString(36).substr(2, 5)}`);
+            const logEntry = {
+                action, // 'ADD', 'EDIT', 'DELETE', 'TOGGLE_DANGER'
+                itemId,
+                itemName,
+                details,
+                timestamp: serverTimestamp()
+            };
+            await set(newLogRef, logEntry);
+        } catch (error) {
+            console.error('Error pushing log to Firebase:', error);
+            // Don't throw here to avoid blocking main actions if logging fails
+        }
+    },
+
+    /**
+     * Subscribe to history logs
+     */
+    subscribeToLogs(callback) {
+        const logsRef = ref(database, 'history');
+        return onValue(logsRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const val = snapshot.val();
+                const logsArray = Object.entries(val).map(([id, data]) => ({
+                    id,
+                    ...data
+                }));
+                // Sort by timestamp descending
+                callback(logsArray.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)));
+            } else {
+                callback([]);
+            }
+        });
+    },
+
+    /**
+     * Delete a specific log entry
+     */
+    async deleteLog(logId) {
+        if (!logId) return;
+        try {
+            const logRef = ref(database, `history/${logId}`);
+            await remove(logRef);
+        } catch (error) {
+            console.error('Error deleting log from Firebase:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Clear all history logs
+     */
+    async clearLogs() {
+        try {
+            const logsRef = ref(database, 'history');
+            await remove(logsRef);
+        } catch (error) {
+            console.error('Error clearing logs from Firebase:', error);
+            throw error;
+        }
+    },
+
+    /**
      * Subscribe to realtime updates
      * @param {Function} callback - Function to receive the sanitized array
      */
