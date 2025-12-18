@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { firebaseService } from './services/firebaseService';
 import { GHS_CONFIG, STATUS_OPTIONS, EMPTY_FORM } from './constants';
+import { checkIsExpired, formatDateTime } from './utils';
 
 // --- 1. Utility Components ---
 
@@ -127,31 +128,7 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
 
 
 
-const checkIsExpired = (expiryDate) => {
-  if (!expiryDate || typeof expiryDate !== 'string') return false;
 
-  const cleanDate = expiryDate.trim();
-
-  // Check for Year only format (YYYY)
-  if (/^\d{4}$/.test(cleanDate)) {
-    const year = parseInt(cleanDate, 10);
-    const currentYear = new Date().getFullYear();
-    return year < currentYear;
-  }
-
-  // Try parsing DD/MM/YYYY
-  const parts = cleanDate.split('/');
-  if (parts.length === 3) {
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
-    const expDate = new Date(year, month, day);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return expDate < today;
-  }
-  return false;
-};
 
 // --- 3. Main Application ---
 
@@ -182,12 +159,7 @@ const ChemicalInventoryApp = () => {
   // --- Data Loading (Realtime) ---
   useEffect(() => {
     setIsLoading(true);
-    const unsubscribe = firebaseService.subscribeToData((newData) => {
-      // Safety: Ensure data is always an array (Firebase RD can return Objects with index keys)
-      const sanitizedData = Array.isArray(newData)
-        ? newData
-        : (newData ? Object.values(newData) : []);
-
+    const unsubscribe = firebaseService.subscribeToData((sanitizedData) => {
       setData(sanitizedData);
       setIsLoading(false);
     });
@@ -248,18 +220,18 @@ const ChemicalInventoryApp = () => {
         finalFormData.status = "Ready";
       }
 
-      let newData;
       if (isEditing) {
-        newData = data.map(item => item.id === formData.id ? finalFormData : item);
+        // Atomic Update
+        await firebaseService.saveItem(finalFormData);
       } else {
+        // Check if ID exists before adding new
         if (data.some(item => item.id === formData.id)) {
           throw new Error(`ID ${formData.id} already exists. Please use a different ID.`);
         }
-        newData = [...data, finalFormData];
+        await firebaseService.saveItem(finalFormData);
       }
 
-      // Save to Firebase
-      await firebaseService.saveData(newData);
+
 
       // Success
       setIsModalOpen(false);
@@ -277,8 +249,7 @@ const ChemicalInventoryApp = () => {
 
     setIsSaving(true);
     try {
-      const newData = data.filter(item => item.id !== id);
-      await firebaseService.saveData(newData);
+      await firebaseService.deleteItem(id);
     } catch (err) {
       console.error("Delete error:", err);
       setError("Error deleting data");
@@ -346,13 +317,7 @@ const ChemicalInventoryApp = () => {
     }, { updatedAt: 0 });
 
     if (latest.updatedAt) {
-      const date = new Date(latest.updatedAt);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${day}/${month}/${year} at ${hours}:${minutes}`;
+      return formatDateTime(latest.updatedAt);
     }
 
     // Fallback for old data without timestamp
@@ -847,10 +812,7 @@ const ChemicalInventoryApp = () => {
 
                 Promise.all([firebaseService.fetchDataOnce(), minDelay])
                   .then(([newData]) => {
-                    const sanitizedData = Array.isArray(newData)
-                      ? newData
-                      : (newData ? Object.values(newData) : []);
-                    setData(sanitizedData);
+                    setData(newData);
                     setIsLoading(false);
                   })
                   .catch(err => {

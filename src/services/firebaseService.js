@@ -1,8 +1,9 @@
-import { ref, get, set, onValue } from 'firebase/database';
+import { ref, get, set, update, remove, onValue } from 'firebase/database';
 import { database } from './firebase';
 
 /**
  * Service to handle Firebase Realtime Database operations
+ * Optimized for Atomicity and Multi-user Reliability
  */
 export const firebaseService = {
     /**
@@ -15,7 +16,9 @@ export const firebaseService = {
             const snapshot = await get(dbRef);
 
             if (snapshot.exists()) {
-                return snapshot.val();
+                const val = snapshot.val();
+                // Ensure we return an array regardless of storage format
+                return Array.isArray(val) ? val : Object.values(val);
             }
             return [];
         } catch (error) {
@@ -25,41 +28,62 @@ export const firebaseService = {
     },
 
     /**
-     * Fetch data once without subscribing (alias for getData)
-     * @returns {Promise<Array>} Array of chemical items
+     * Fetch data once with timeout protection
      */
     async fetchDataOnce() {
         const timeout = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Connection timed out')), 5000)
+            setTimeout(() => reject(new Error('Connection timed out')), 8000)
         );
         return Promise.race([this.getData(), timeout]);
     },
 
     /**
-     * Save chemical data to Firebase
-     * @param {Array} data - Array of chemical items
-     * @returns {Promise<void>}
+     * Save/Update a single item atomically
+     * This prevents overwriting other users' edits
      */
-    async saveData(data) {
+    async saveItem(item) {
+        if (!item.id) throw new Error('Item ID is required for saving');
         try {
-            const dbRef = ref(database, 'chemicals');
-            await set(dbRef, data);
+            // Clean ID for Firebase key (remove special characters if any)
+            const cleanId = item.id.replace(/[.#$[\]]/g, '_');
+            const itemRef = ref(database, `chemicals/${cleanId}`);
+            await set(itemRef, item);
         } catch (error) {
-            console.error('Error saving data to Firebase:', error);
+            console.error('Error saving item to Firebase:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Delete a single item atomically
+     */
+    async deleteItem(id) {
+        if (!id) return;
+        try {
+            const cleanId = id.replace(/[.#$[\]]/g, '_');
+            const itemRef = ref(database, `chemicals/${cleanId}`);
+            await remove(itemRef);
+        } catch (error) {
+            console.error('Error deleting item from Firebase:', error);
             throw error;
         }
     },
 
     /**
      * Subscribe to realtime updates
-     * @param {Function} callback - Function to call when data changes
-     * @returns {Function} Unsubscribe function
+     * @param {Function} callback - Function to receive the sanitized array
      */
     subscribeToData(callback) {
         const dbRef = ref(database, 'chemicals');
         return onValue(dbRef, (snapshot) => {
-            const data = snapshot.exists() ? snapshot.val() : [];
-            callback(data);
+            if (snapshot.exists()) {
+                const val = snapshot.val();
+                const dataArray = Array.isArray(val) ? val : Object.values(val);
+                // Filter out any null entries that might occur in sparse arrays
+                callback(dataArray.filter(item => item !== null));
+            } else {
+                callback([]);
+            }
         });
     }
 };
