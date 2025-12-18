@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search, Filter, AlertTriangle, Beaker, Flame, Skull, Droplet, Wind, CircleDot, Bug, AlertCircle,
   Plus, Trash2, Edit, X, ChevronDown, ChevronUp, Loader2, RefreshCw, FileText, Check, Save, FileSpreadsheet,
-  Bomb, Fish, Moon, Sun, Download, BarChart3, Clock, AlertCircle, AlertTriangle, Beaker, Flame, Skull, Wind, CircleDot
+  Bomb, Fish, Moon, Sun, Download, BarChart3, Clock, ArrowRight
 } from 'lucide-react';
 import { firebaseService } from './services/firebaseService';
 import { GHS_CONFIG, STATUS_OPTIONS, EMPTY_FORM, SIGNAL_WORD_OPTIONS } from './constants';
@@ -167,6 +167,7 @@ const ChemicalInventoryApp = () => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterGHS, setFilterGHS] = useState("All");
   const [filterExpNote, setFilterExpNote] = useState("All");
+  const [filterSignalWord, setFilterSignalWord] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -316,8 +317,9 @@ const ChemicalInventoryApp = () => {
     const matchesStatus = filterStatus === "All" || item.status === filterStatus;
     const matchesGHS = filterGHS === "All" || (item.ghs && item.ghs[filterGHS]);
     const matchesExpNote = filterExpNote === "All" || item.expirationNote === filterExpNote;
+    const matchesSignalWord = filterSignalWord === "All" || item.signalWord === filterSignalWord;
 
-    return matchesSearch && matchesLocation && matchesStatus && matchesGHS && matchesExpNote;
+    return matchesSearch && matchesLocation && matchesStatus && matchesGHS && matchesExpNote && matchesSignalWord;
   });
 
   const stats = {
@@ -376,6 +378,7 @@ const ChemicalInventoryApp = () => {
     setFilterStatus("All");
     setFilterGHS("All");
     setFilterExpNote("All");
+    setFilterSignalWord("All");
   };
 
   const handleGhsToggle = (key) => {
@@ -392,10 +395,12 @@ const ChemicalInventoryApp = () => {
     setFilterStatus("All");
     setFilterGHS("All");
     setFilterExpNote("All");
+    setFilterSignalWord("All");
 
     // Apply specific filter
     if (type === 'status') setFilterStatus(value);
     if (type === 'ghs') setFilterGHS(value);
+    if (type === 'signalWord') setFilterSignalWord(value);
 
     // Scroll to filter section
     setTimeout(() => {
@@ -409,16 +414,16 @@ const ChemicalInventoryApp = () => {
       ID: item.id,
       Name: item.name,
       CAS: item.cas,
+      Quantity: item.remaining,
       Location: item.location,
-      Remaining: item.remaining,
       ImportDate: item.importDate || '-',
       Expiry: item.expiry || '-',
-
+      SignalWord: item.signalWord || '-',
       Status: item.status,
       GHS: Object.keys(item.ghs || {})
         .filter(k => item.ghs[k])
         .map(k => GHS_CONFIG.find(g => g.key === k)?.label || k)
-        .join(', '),
+        .join('| '),
       Hazard: item.hazard,
       Note: item.expirationNote
     }));
@@ -440,18 +445,19 @@ const ChemicalInventoryApp = () => {
     const htmlTable = `
       <table>
         <tr>
-          <th>ID</th><th>Name</th><th>CAS</th><th>Location</th><th>Remaining</th>
-          <th>Import Date</th><th>Expiry</th><th>Status</th><th>GHS</th><th>Hazard</th><th>Note</th>
+          <th>ID</th><th>Name</th><th>CAS</th><th>Qty</th><th>Location</th>
+          <th>In Date</th><th>Exp Date</th><th>Signal Word</th><th>Status</th><th>GHS</th><th>Hazard</th><th>Note</th>
         </tr>
         ${filteredData.map(item => `
           <tr>
             <td>${item.id}</td>
             <td>${item.name}</td>
             <td>${item.cas}</td>
-            <td>${item.location}</td>
             <td>${item.remaining}</td>
+            <td>${item.location}</td>
             <td>${item.importDate || '-'}</td>
             <td>${item.expiry || '-'}</td>
+            <td>${item.signalWord || '-'}</td>
             <td>${item.status}</td>
             <td>${Object.keys(item.ghs || {})
         .filter(k => item.ghs[k])
@@ -595,15 +601,10 @@ const ChemicalInventoryApp = () => {
               </div>
             </div>
             <button
-              onClick={() => {
-                setFilterStatus("All");
-                setFilterGHS("All");
-                setSearchTerm("");
-                // We don't have a signal word filter yet, but we'll show all and highlight
-              }}
-              className="px-4 py-2 bg-white text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition-colors hidden sm:block"
+              onClick={() => handleStatClick('signalWord', 'Danger')}
+              className="px-4 py-2 bg-white text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition-colors hidden sm:block shadow-sm"
             >
-              See All
+              See All Danger Items
             </button>
           </div>
         )}
@@ -661,13 +662,18 @@ const ChemicalInventoryApp = () => {
             <div className="text-3xl font-black text-red-600 dark:text-red-400">{stats.flammable}</div>
           </button>
 
-          <div className="bg-red-600 p-5 rounded-2xl shadow-lg border border-red-700 flex flex-col justify-between transition-all hover:scale-[1.02]">
+          <button
+            onClick={() => handleStatClick('signalWord', 'Danger')}
+            className="group relative bg-red-600 p-5 rounded-2xl shadow-lg border border-red-700 flex flex-col justify-between transition-all hover:scale-[1.02] active:scale-95 text-left overflow-hidden">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-bl-[40px] flex items-center justify-center transition-colors group-hover:bg-white/20">
+              <AlertTriangle size={20} className="text-white" />
+            </div>
             <div className="text-red-100 text-[10px] font-black uppercase tracking-widest mb-1">Safety: Danger</div>
             <div className="text-3xl font-black text-white">{stats.danger}</div>
             <div className="mt-2 text-[10px] text-red-100 font-bold flex items-center gap-1 italic">
-              <AlertTriangle size={10} /> Requires Attention
+              Click to Audit <ArrowRight size={10} />
             </div>
-          </div>
+          </button>
 
           <button
             onClick={() => handleStatClick('status', 'Expired')}
@@ -803,18 +809,19 @@ const ChemicalInventoryApp = () => {
             )}
           </div>
 
-          {/* Bottom Row: Dropdowns - Scrollable on mobile */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          {/* Bottom Row: Dropdowns - Ultra Responsive */}
+          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
 
             {/* Location Filter */}
             <div className="relative">
               <select
-                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100"
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100 transition-colors"
                 value={filterLocation}
                 onChange={(e) => setFilterLocation(e.target.value)}
               >
-                {locations.map(loc => (
-                  <option key={loc} value={loc}>{loc === 'All' ? 'ทุกสถานที่' : loc}</option>
+                <option value="All">ทุกที่ (All Locations)</option>
+                {locations.filter(l => l !== 'All').map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
                 ))}
               </select>
               <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
@@ -823,16 +830,29 @@ const ChemicalInventoryApp = () => {
             {/* Status Filter */}
             <div className="relative">
               <select
-                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100"
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100 transition-colors"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
-                <option value="All">ทุกสถานะ</option>
-                <option value="Ready">พร้อมใช้งาน</option>
-                <option value="Not Ready">ไม่พร้อมใช้งาน</option>
-                <option value="Expired">หมดอายุ</option>
-                <option value="Dispose">ส่งกำจัด</option>
-                <option value="Donate">บริจาค</option>
+                <option value="All">สถานะ (Status)</option>
+                {STATUS_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
+            </div>
+
+            {/* Signal Word Filter */}
+            <div className="relative">
+              <select
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100 transition-colors"
+                value={filterSignalWord}
+                onChange={(e) => setFilterSignalWord(e.target.value)}
+              >
+                <option value="All">กลุ่มความปลอดภัย</option>
+                {SIGNAL_WORD_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
               <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
             </div>
@@ -840,20 +860,14 @@ const ChemicalInventoryApp = () => {
             {/* GHS Filter */}
             <div className="relative">
               <select
-                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100"
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100 transition-colors"
                 value={filterGHS}
                 onChange={(e) => setFilterGHS(e.target.value)}
               >
-                <option value="All">ทุกอันตราย (GHS)</option>
-                <option value="explosive">วัตถุระเบิด</option>
-                <option value="flammable">สารไวไฟ</option>
-                <option value="oxidizing">สารออกซิไดส์</option>
-                <option value="gas">ก๊าซภายใต้ความดัน</option>
-                <option value="corrosive">สารกัดกร่อน</option>
-                <option value="toxic">สารมีพิษ</option>
-                <option value="irritant">สารระคายเคือง</option>
-                <option value="health">อันตรายต่อสุขภาพ</option>
-                <option value="env">อันตรายต่อสิ่งแวดล้อม</option>
+                <option value="All">อันตราย (GHS)</option>
+                {GHS_CONFIG.map(ghs => (
+                  <option key={ghs.key} value={ghs.key}>{ghs.label}</option>
+                ))}
               </select>
               <ChevronDown size={14} className="absolute right-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
             </div>
@@ -861,11 +875,11 @@ const ChemicalInventoryApp = () => {
             {/* Expiration Note Filter */}
             <div className="relative">
               <select
-                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100"
+                className="w-full pl-3 pr-8 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm appearance-none cursor-pointer text-gray-900 dark:text-gray-100 transition-colors"
                 value={filterExpNote}
                 onChange={(e) => setFilterExpNote(e.target.value)}
               >
-                <option value="All">ทุกหมายเหตุ</option>
+                <option value="All">หมายเหตุ (Notes)</option>
                 {uniqueExpirationNotes.filter(n => n !== 'All').map(note => (
                   <option key={note} value={note}>{note}</option>
                 ))}
