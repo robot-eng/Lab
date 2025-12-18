@@ -51,7 +51,7 @@ const GHSIcons = ({ ghs, size = 16 }) => {
 };
 
 // --- Mobile Card Component ---
-const ChemicalCard = ({ item, onEdit, onDelete }) => {
+const ChemicalCard = ({ item, onEdit, onDelete, onToggleDanger }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Status Border Accent
@@ -76,6 +76,16 @@ const ChemicalCard = ({ item, onEdit, onDelete }) => {
           </div>
         </div>
         <div className="flex flex-col gap-2 shrink-0 ml-2">
+          <button
+            onClick={() => onToggleDanger(item)}
+            className={`p-2.5 rounded-xl transition-all shadow-sm border-2 ${item.signalWord === 'Danger'
+                ? 'bg-red-600 text-white border-red-700 animate-pulse'
+                : 'bg-white dark:bg-slate-700 text-gray-400 border-gray-100 dark:border-gray-600 hover:text-red-500 hover:border-red-200'
+              }`}
+            title={item.signalWord === 'Danger' ? "Remove Danger Status" : "Mark as Danger"}
+          >
+            <AlertTriangle size={20} />
+          </button>
           <button
             onClick={() => onEdit(item)}
             className="p-2.5 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-xl hover:bg-blue-100 transition-colors shadow-sm"
@@ -278,6 +288,16 @@ const ChemicalInventoryApp = () => {
       setError("Error deleting data");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const toggleDanger = async (item) => {
+    const newSignalWord = item.signalWord === "Danger" ? "-" : "Danger";
+    try {
+      await firebaseService.saveItem({ ...item, signalWord: newSignalWord });
+    } catch (err) {
+      console.error("Toggle danger error:", err);
+      setError("Failed to update status");
     }
   };
 
@@ -941,6 +961,7 @@ const ChemicalInventoryApp = () => {
                   item={item}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onToggleDanger={toggleDanger}
                 />
               ))}
             </div>
@@ -1000,6 +1021,16 @@ const ChemicalInventoryApp = () => {
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => toggleDanger(item)}
+                              className={`p-1.5 rounded-lg transition-all border ${item.signalWord === 'Danger'
+                                  ? 'text-white bg-red-600 border-red-700 shadow-sm'
+                                  : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 border-transparent'
+                                }`}
+                              title={item.signalWord === 'Danger' ? "Remove Danger Status" : "Mark as Danger"}
+                            >
+                              <AlertTriangle size={18} />
+                            </button>
                             <button
                               onClick={() => handleEdit(item)}
                               className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
@@ -1182,8 +1213,8 @@ const ChemicalInventoryApp = () => {
                               type="button"
                               onClick={() => setFormData(prev => ({ ...prev, signalWord: opt.value }))}
                               className={`py-3 px-1 rounded-2xl text-[10px] font-black uppercase tracking-tighter transition-all border-2 flex items-center justify-center text-center shadow-sm active:scale-90 ${isActive
-                                  ? `${opt.color} border-current scale-105 shadow-md`
-                                  : 'bg-gray-50 dark:bg-slate-700/50 text-gray-400 border-transparent dark:border-gray-600/50 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-600'
+                                ? `${opt.color} border-current scale-105 shadow-md`
+                                : 'bg-gray-50 dark:bg-slate-700/50 text-gray-400 border-transparent dark:border-gray-600/50 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-600'
                                 }`}
                             >
                               {opt.label.split(' (')[0]}
